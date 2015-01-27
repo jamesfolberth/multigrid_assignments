@@ -30,21 +30,24 @@ function ModelProblem1D(L::Int, sigma::Float64 = 1e0)
    h = 1e0/float64(m+1)
 
    # Build matrix in COO format and then pass to Julia's sparse to form CSC
-   # append! probably grows in an intelligent fashion.  I could just
-   # pre-allocate 3n-2 entries
-   row = [1,1]
-   col = [1,2]
-   val = [2e0/h^2+sigma, -1e0/h^2]
+
+   row = Array(Int, 3*n-2)
+   col = Array(Int, 3*n-2)
+   val = Array(Float64, 3*n-2)
+
+   row[1:2] = [1,1]
+   col[1:2] = [1,2]
+   val[1:2] = [2e0/h^2+sigma, -1e0/h^2]
 
    for i in 2:n-1
-      append!(row,[i,i,i])
-      append!(col,[i-1,i,i+1])
-      append!(val,[-1e0/h^2, 2e0/h^2+sigma, -1e0/h^2])
+      row[3*i-3:3*i-1] = [i,i,i]
+      col[3*i-3:3*i-1] = [i-1,i,i+1]
+      val[3*i-3:3*i-1] = [-1e0/h^2, 2e0/h^2+sigma, -1e0/h^2]
    end
 
-   append!(row, [n,n])
-   append!(col, [n-1,n])
-   append!(val, [-1e0/h^2, 2e0/h^2+sigma])
+   row[3*n-3:3*n-2] = [n,n]
+   col[3*n-3:3*n-2] = [n-1,n]
+   val[3*n-3:3*n-2] = [-1e0/h^2, 2e0/h^2+sigma]
 
    # convert to built-in CSC format
    return sparse(row, col, val, m, n)
@@ -118,7 +121,7 @@ end
 
 # These are just some routines to test wheter or not I goofed something up
 function test()
-   #@time A = ModelProblem2D(10,12,1e0)
+   @time A = ModelProblem2D(10,12,1e0)
    #x = ones(Float64,size(A,2))
 
    #@time b = SparseMatVec(A,x)
