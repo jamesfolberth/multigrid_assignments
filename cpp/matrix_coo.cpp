@@ -36,48 +36,20 @@ matrix_coo<T>::matrix_coo(
 // Type conversion //
 /////////////////////
 
-//template<typename T>
-//matrix_crs<T>* matrix_coo<T>::to_crs(void) {
-//   matrix_crs<T>* newmat = new matrix_crs<T>(row_ind, col_ind, val, m, n);
-//   return newmat;
-//}
 
 
-// Output
-//template<typename T>
-//void matrix_coo<T>::print_full(void) {
-//// Print the matrix as a dense array
-//
-//   //cout.precision(_MATRIX_COO_PRINT_PREC_);
-//
-//   //// TODO this shit's still borked
-//   //unsigned ind = 0;
-//   //unsigned next_nonzero;
-//   //for (unsigned i=0; i<row_ind.size(); ++i) {
-//   //   next_nonzero = n*row_ind[i]+col_ind[i];
-//   //   for (unsigned j=ind; j<next_nonzero; ++j) {
-//   //      if ( (j % n) == 0) {
-//   //         cout << endl 
-//   //              << setw(_MATRIX_COO_PRINT_WIDTH_)
-//   //              << double(0) 
-//   //              << "  ";
-//   //      }
-//   //      else {
-//   //         cout << setw(_MATRIX_COO_PRINT_WIDTH_) 
-//   //              << double(0) 
-//   //              << "  ";
-//   //      }
-//   //   }
-//   //   cout << setw(_MATRIX_COO_PRINT_WIDTH_) 
-//   //        << double(val[i]) 
-//   //        << "  ";
-//   //   ind = next_nonzero+1;
-//   //}
-//
-//   //// TODO print any trailing zeros
-//   //
-//   //cout << endl;
-//}
+////////////
+// Output //
+////////////
+template<typename T>
+void matrix_coo<T>::print_full(void) {
+// print the matrix as a dense array (via converting to CRS)
+   matrix_crs<T>* newmat = new matrix_crs<T>(this->row_ind, this->col_ind,
+         this->val, this->m, this->n);
+
+   newmat->print_full();
+   delete newmat;
+}
 
 
 // Utils (private)

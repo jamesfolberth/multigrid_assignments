@@ -45,11 +45,11 @@ class matrix_coo {
                  vector<T>& init_val,
                  size_t init_m=0, size_t init_n=0);
 
+      ~matrix_coo<T>() = default;
+
       /////////////////////
       // Type conversion //
       /////////////////////
-      template<typename U>
-      matrix_crs<U>& to_crs(void);
 
       ////////////
       // Output //

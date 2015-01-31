@@ -42,6 +42,8 @@ class matrix_crs {
                  vector<T>& init_val,
                  size_t init_m=0, size_t init_n=0);
 
+      ~matrix_crs<T>() = default;
+
       // Type conversion
       //matrix_coo<T>& to_coo();
 

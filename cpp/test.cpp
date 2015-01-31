@@ -48,10 +48,7 @@ void test_matrix_coo(void) {
    matrix_coo<double> coomat(rind, cind, vals);
    cout << coomat << endl;
 
-   matrix_coo<double>* newmat = new matrix_coo<double>(rind, cind, vals);
-
-   //coomat.to_crs();
-   //coomat.print_full();
+   coomat.print_full();
 
    // }}}
 }
