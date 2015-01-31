@@ -7,7 +7,9 @@
 
 using namespace std;
 
-// Construction and destruction
+//////////////////////////////////
+// Construction and destruction //
+//////////////////////////////////
 template<typename T>
 matrix_coo<T>::matrix_coo(
       vector<unsigned>& init_row_ind,
@@ -30,16 +32,64 @@ matrix_coo<T>::matrix_coo(
    this->sort_inds();
 }
 
+/////////////////////
+// Type conversion //
+/////////////////////
 
+//template<typename T>
+//matrix_crs<T>* matrix_coo<T>::to_crs(void) {
+//   matrix_crs<T>* newmat = new matrix_crs<T>(row_ind, col_ind, val, m, n);
+//   return newmat;
+//}
+
+
+// Output
+//template<typename T>
+//void matrix_coo<T>::print_full(void) {
+//// Print the matrix as a dense array
+//
+//   //cout.precision(_MATRIX_COO_PRINT_PREC_);
+//
+//   //// TODO this shit's still borked
+//   //unsigned ind = 0;
+//   //unsigned next_nonzero;
+//   //for (unsigned i=0; i<row_ind.size(); ++i) {
+//   //   next_nonzero = n*row_ind[i]+col_ind[i];
+//   //   for (unsigned j=ind; j<next_nonzero; ++j) {
+//   //      if ( (j % n) == 0) {
+//   //         cout << endl 
+//   //              << setw(_MATRIX_COO_PRINT_WIDTH_)
+//   //              << double(0) 
+//   //              << "  ";
+//   //      }
+//   //      else {
+//   //         cout << setw(_MATRIX_COO_PRINT_WIDTH_) 
+//   //              << double(0) 
+//   //              << "  ";
+//   //      }
+//   //   }
+//   //   cout << setw(_MATRIX_COO_PRINT_WIDTH_) 
+//   //        << double(val[i]) 
+//   //        << "  ";
+//   //   ind = next_nonzero+1;
+//   //}
+//
+//   //// TODO print any trailing zeros
+//   //
+//   //cout << endl;
+//}
+
+
+// Utils (private)
 template<typename T>
 void matrix_coo<T>::sort_inds(void) {
 // Reorder the row/col/vals so that they are in row-major order
 
    // Copy row inds, col inds, vals to vector of (i,j,val) tuples
    // Then sort vector of tuples with stdlib sort
-   // Then overwrite values
+   // Then overwrite values and remove duplicates
    // This is going to be slow
-
+   
    struct sort_tuple {
       unsigned i;
       unsigned j;
@@ -66,11 +116,33 @@ void matrix_coo<T>::sort_inds(void) {
             else return 0;
          });
 
+   // assign to class member and deal with duplicate entries by adding
+   unsigned old_row=-1, old_col=-1, num_dups=0;
    for (unsigned i=0; i<sort_me.size(); ++i) {
-      row_ind[i] = sort_me[i].i;
-      col_ind[i] = sort_me[i].j;
-      val[i] = sort_me[i].val;
+      // if not a duplicate (case i=0 always passes, since it's first)
+      if (old_row != sort_me[i].i || old_col != sort_me[i].j) {
+         row_ind[i-num_dups] = sort_me[i].i;
+         col_ind[i-num_dups] = sort_me[i].j;
+         val[i-num_dups] = sort_me[i].val;
+
+         old_row = sort_me[i].i;
+         old_col = sort_me[i].j;
+      }
+      else {
+         num_dups += 1;
+         val[i-num_dups] += sort_me[i].val;
+         continue;
+      }
    }
+
+   if (num_dups > 0) {
+      cerr << "warning: matrix_coo::sort_inds duplicate entries found; "
+           << "combining entries by adding" << endl;
+   }
+
+   row_ind.resize(row_ind.size()-num_dups);
+   col_ind.resize(col_ind.size()-num_dups);
+   val.resize(val.size()-num_dups);
 }
 
 

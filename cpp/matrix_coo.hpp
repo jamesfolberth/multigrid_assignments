@@ -9,7 +9,11 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <iomanip>
 #include <vector>
+
+#include "utils.hpp"
+#include "matrix_crs.hpp"
 
 using namespace std;
 
@@ -31,17 +35,29 @@ class matrix_coo {
       size_t m;          // number of rows
       size_t n;          // number of cols
 
-      // Construction and Destruction
+      //////////////////////////////////
+      // Construction and Destruction //
+      //////////////////////////////////
       matrix_coo<T>() = default;
 
       matrix_coo<T>(vector<unsigned>& init_row_ind,
                  vector<unsigned>& init_col_ind,
                  vector<T>& init_val,
-                 size_t init_m, size_t init_n);
+                 size_t init_m=0, size_t init_n=0);
 
-      // Output
+      /////////////////////
+      // Type conversion //
+      /////////////////////
+      template<typename U>
+      matrix_crs<U>& to_crs(void);
+
+      ////////////
+      // Output //
+      ////////////
       // Defined below, not in matrix_coo.cpp
       friend ostream& operator<< <>(ostream& os, const matrix_coo& mat); 
+
+      void print_full(void);
  
    private:
       void sort_inds(void);
@@ -54,9 +70,25 @@ ostream& operator<<(ostream& os, const matrix_coo<T>& mat) {
    os << "Coordinate Sparse (COO) (rows = " << mat.m << ", cols = " << 
       mat.n << ", nnz = " << mat.val.size() << ")" << endl; // << endl;
 
+   if ( _DEBUG_ >=1 ) {
+      os << "row_ind: ";
+      for (unsigned i=0; i < mat.row_ind.size(); ++i)
+         cout << mat.row_ind[i] << "  ";
+      os << endl;
+      os << "col_ind: ";
+      for (unsigned i=0; i < mat.col_ind.size(); ++i)
+         cout << mat.col_ind[i] << "  ";
+      os << endl;
+      os << "val:     ";
+      for (unsigned i=0; i < mat.val.size(); ++i)
+         cout << mat.val[i] << "  ";
+      os << endl;
+   }
+
    for ( unsigned i=0; i < mat.row_ind.size(); ++i) {
       os << "  (" << mat.row_ind[i] << ", " << mat.col_ind[i]
-         << ") -> " << mat.val[i] << endl;
+         << ") -> " << setprecision(_PRINT_SPARSE_PREC_)
+         << mat.val[i] << endl;
    }
 
    return os;
