@@ -10,6 +10,9 @@
 #
 # For example, you could do
 # julia> PA1Driver(2,3,1.)
+# 
+# Be sure that the third argument to PA1Driver is a float by appending
+# a period, or doing 1e0
 
 # Note that I'm running Julia 0.4
 # Here are the specifics.  I don't know if v0.3 is vastly different from v0.4
@@ -90,6 +93,8 @@ function PA1Driver(Lx::Int, Ly::Int, sigma::Float64)
 
    x = ones(Float64,size(A2,2))
    b2 = SparseMatVec(A2,x)
+
+   println("Rows of matrix files are column pointer, row index, and value")
 
    # write to files
    fA1 = open("A1.txt","w+")
