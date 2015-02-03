@@ -1,0 +1,19 @@
+
+Testing with gdb
+================
+In test.cpp, I have a couple blocks that build a random matrix.  I usually want to run this a gazillion times to see if it breaks things.  If it breaks things bad enough, I'll get a seg fault or something.  I can make gdb run test a bunch by doing the following:
+
+$ gdb test
+(gdb) break exit
+(gdb) commands
+(gdb) run
+(gdb) exit
+(gdb) run
+
+This will put a breakpoint at the exit statement of test and run the code a bunch or until it segfaults.
+
+
+TODO
+====
+* Lots of stuff
+

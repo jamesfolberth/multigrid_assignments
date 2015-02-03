@@ -36,6 +36,12 @@ matrix_crs<T>::matrix_crs(
    row_ptr[m] = val.size();
    unsigned row_ptr_ind = 0;
 
+   // Test for matrix of zeros
+   if (val.size() == 0) {
+      fill(row_ptr.begin(), row_ptr.end(), 0);
+      return;
+   }
+
    // Handle initial rows of zeros
    for (unsigned j=0; j<coomat.row_ind[0]; ++j)
       row_ptr[row_ptr_ind + j] = 0;
@@ -94,7 +100,7 @@ void matrix_crs<T>::print_full(void) {
       for (unsigned c=0; c<n; ++c) {
 
          // we've hit a nonzero in this row
-         if (c == col_ind[ind] && ind < row_ptr[r+1] ) { 
+         if (col_ind.size() > 0 && c == col_ind[ind] && ind < row_ptr[r+1] ) { 
             cout << ' ' << setw(_PRINT_FULL_WIDTH_) << setfill(' ')
                  << setprecision(_PRINT_FULL_PREC_)
                  << static_cast<double>(val[ind]);

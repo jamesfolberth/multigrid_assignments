@@ -14,7 +14,7 @@
 
 #define _PRINT_SPARSE_PREC_ 5
 
-#define _PRINT_FULL_PREC_ 5
-#define _PRINT_FULL_WIDTH_ 6
+#define _PRINT_FULL_PREC_ 4
+#define _PRINT_FULL_WIDTH_ 10
 
 #endif

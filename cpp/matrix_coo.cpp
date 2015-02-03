@@ -21,6 +21,16 @@ matrix_coo<T>::matrix_coo(
    col_ind = init_col_ind;
    val = init_val;
 
+   if (val.size() == 0) {
+      if (init_m == 0 && init_n == 0) {
+         cerr << "matrix_coo: Can't construct an empty (zero) matrix without "
+              << "specifying m and n!" << endl;
+         exit(-1);
+      }
+      m = init_m; n = init_n;
+      return;
+   }
+
    unsigned max_row = 1+*max_element(row_ind.begin(), row_ind.end());
    unsigned max_col = 1+*max_element(col_ind.begin(), col_ind.end());
    m = (init_m < max_row) ? max_row : init_m;
