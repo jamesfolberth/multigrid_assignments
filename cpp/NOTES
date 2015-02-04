@@ -13,6 +13,11 @@ $ gdb test
 This will put a breakpoint at the exit statement of test and run the code a bunch or until it segfaults.
 
 
+
+http://stackoverflow.com/questions/2902064/how-to-track-down-a-double-free-or-corruption-error-in-c-with-gdb
+
+Use valgrind!
+
 TODO
 ====
 * Lots of stuff

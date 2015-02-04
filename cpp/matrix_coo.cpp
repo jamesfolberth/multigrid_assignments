@@ -45,7 +45,10 @@ matrix_coo<T>::matrix_coo(
 /////////////////////
 // Type conversion //
 /////////////////////
-
+template<typename T>
+matrix_crs<T> matrix_coo<T>::to_crs(void) {
+   return matrix_crs<T>(row_ind, col_ind, val, m, n);
+}
 
 
 ////////////
@@ -53,12 +56,13 @@ matrix_coo<T>::matrix_coo(
 ////////////
 template<typename T>
 void matrix_coo<T>::print_full(void) {
-// print the matrix as a dense array (via converting to CRS)
-   matrix_crs<T>* newmat = new matrix_crs<T>(this->row_ind, this->col_ind,
-         this->val, this->m, this->n);
-
-   newmat->print_full();
-   delete newmat;
+   this->to_crs().print_full();
+//// print the matrix as a dense array (via converting to CRS)
+//   matrix_crs<T>* newmat = new matrix_crs<T>(this->row_ind, this->col_ind,
+//         this->val, this->m, this->n);
+//
+//   newmat->print_full();
+//   delete newmat;
 }
 
 
@@ -70,7 +74,7 @@ void matrix_coo<T>::sort_inds(void) {
    // Copy row inds, col inds, vals to vector of (i,j,val) tuples
    // Then sort vector of tuples with stdlib sort
    // Then overwrite values and remove duplicates
-   // This is going to be slow
+   // This is probably going to be slow
    
    struct sort_tuple {
       unsigned i;

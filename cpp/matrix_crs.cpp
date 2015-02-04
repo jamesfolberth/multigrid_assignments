@@ -7,7 +7,9 @@
 
 using namespace std;
 
-// Construction and destruction
+//////////////////////////////////
+// Construction and Destruction //
+//////////////////////////////////
 template<typename T>
 matrix_crs<T>::matrix_crs(
       vector<unsigned>& init_row_ind,
@@ -23,6 +25,7 @@ matrix_crs<T>::matrix_crs(
    matrix_coo<T> coomat(init_row_ind, init_col_ind, init_val, init_m, init_n); 
 
    if ( _DEBUG_ >= 2) {
+      cout << "debug 2: CRS matrix construction" << endl;
       cout << coomat << endl;
    }
 
@@ -90,7 +93,33 @@ matrix_crs<T>::matrix_crs(
 }
 
 
-// Output
+/////////////////////
+// Type conversion //
+/////////////////////
+template<typename T>
+matrix_coo<T> matrix_crs<T>::to_coo(void) {
+   vector<unsigned> new_row_ind(col_ind.size());
+
+   for (unsigned i=0; i<row_ptr.size()-1; ++i) {
+      fill(new_row_ind.begin()+row_ptr[i],
+           new_row_ind.begin()+row_ptr[i+1],
+           i);
+   }
+
+   return matrix_coo<T>(new_row_ind, col_ind, val, m, n);
+}
+
+
+template<typename T>
+matrix_crs<T> matrix_crs<T>::to_crs(void) {
+   return *this;
+}
+
+
+
+////////////
+// Output //
+////////////
 template<typename T>
 void matrix_crs<T>::print_full(void) {
 // Print sparse matrix as a dense array

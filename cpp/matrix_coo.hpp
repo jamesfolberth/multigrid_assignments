@@ -22,6 +22,9 @@ template<typename T>
 class matrix_coo;
 
 template<typename T>
+class matrix_crs;
+
+template<typename T>
 ostream& operator<<(ostream& os, const matrix_coo<T>& mat); 
 
 template <typename T>
@@ -45,11 +48,16 @@ class matrix_coo {
                  vector<T>& init_val,
                  size_t init_m=0, size_t init_n=0);
 
+      matrix_coo<T>(const matrix_coo<T>& ) = default;
+      matrix_coo<T>& operator=(const matrix_coo<T>& ) = default;
+
       ~matrix_coo<T>() = default;
 
       /////////////////////
       // Type conversion //
       /////////////////////
+      matrix_crs<T> to_crs(void);
+
 
       ////////////
       // Output //
@@ -71,6 +79,7 @@ ostream& operator<<(ostream& os, const matrix_coo<T>& mat) {
       mat.n << ", nnz = " << mat.val.size() << ")" << endl; // << endl;
 
    if ( _DEBUG_ >=1 ) {
+      os << "debug 1: COO ostream printing" << endl;
       os << "row_ind: ";
       for (unsigned i=0; i < mat.row_ind.size(); ++i)
          cout << mat.row_ind[i] << "  ";
@@ -81,7 +90,7 @@ ostream& operator<<(ostream& os, const matrix_coo<T>& mat) {
       os << endl;
       os << "val:     ";
       for (unsigned i=0; i < mat.val.size(); ++i)
-         cout << mat.val[i] << "  ";
+         cout << setprecision(_PRINT_SPARSE_PREC_) << mat.val[i] << "  ";
       os << endl;
    }
 

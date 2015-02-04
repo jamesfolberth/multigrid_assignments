@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <iomanip>
 #include <vector>
 
 #include "utils.hpp"
@@ -19,6 +20,9 @@ using namespace std;
 // Forward declare to make function declaration possible
 template<typename T>
 class matrix_crs;
+
+template<typename T>
+class matrix_coo;
 
 template<typename T>
 ostream& operator<<(ostream& os, const matrix_crs<T>& mat); 
@@ -34,7 +38,9 @@ class matrix_crs {
       size_t m;          // number of rows
       size_t n;          // number of cols
 
-      // Construction and Destruction
+      //////////////////////////////////
+      // Construction and Destruction //
+      //////////////////////////////////
       matrix_crs<T>() = default;
 
       matrix_crs<T>(vector<unsigned>& init_row_ind,
@@ -42,12 +48,20 @@ class matrix_crs {
                  vector<T>& init_val,
                  size_t init_m=0, size_t init_n=0);
 
+      matrix_crs<T>(const matrix_crs<T>& ) = default;
+      matrix_crs<T>& operator=(const matrix_crs<T>& ) = default;
+
       ~matrix_crs<T>() = default;// {cout << "delete me!" << endl;};
 
-      // Type conversion
-      //matrix_coo<T>& to_coo();
+      /////////////////////
+      // Type conversion //
+      /////////////////////
+      matrix_coo<T> to_coo(void);
+      matrix_crs<T> to_crs(void);
 
-      // Output
+      ////////////
+      // Output //
+      ////////////
       // Defined below, not in matrix_crs.cpp
       friend ostream& operator<< <>(ostream& os, const matrix_crs& mat); 
 
@@ -65,6 +79,7 @@ ostream& operator<<(ostream& os, const matrix_crs<T>& mat) {
       mat.n << ", nnz = " << mat.val.size() << ")" << endl; // << endl;
 
    if ( _DEBUG_ >= 1 ) {
+      os << "debug 1: CRS ostream printing" << endl;
       os << "row_ptr: ";
       for (unsigned i=0; i<mat.row_ptr.size(); ++i)
          os << mat.row_ptr[i] << "  ";
@@ -86,7 +101,6 @@ ostream& operator<<(ostream& os, const matrix_crs<T>& mat) {
       }
    }
 
-   // TODO implement me
    return os;
 }
 

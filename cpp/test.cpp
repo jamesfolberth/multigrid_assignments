@@ -36,7 +36,7 @@ void test_matrix_coo(void) {
    // Another test
    //vector<unsigned> rind, cind;
    //vector<double> vals;
-   //unsigned m = 10;
+   //unsigned m = 7;
    //rind.resize(m);
    //cind.resize(m);
    //vals.resize(m);
@@ -74,11 +74,15 @@ void test_matrix_coo(void) {
       vals.push_back(val_dist(e2));
    }
 
-   matrix_coo<double> coomat(rind, cind, vals);
+   matrix_coo<double> coomat(rind, cind, vals, m, n);
    cout << coomat << endl;
+   //coomat.print_full();
 
-   coomat.print_full();
+   cout << endl;
+   cout << coomat.to_crs().to_coo() << endl;
+   //coomat.to_crs().to_coo().print_full();
 
+   cout << "I'm almost done" << endl;
    // }}}
 }
 
@@ -106,7 +110,7 @@ void test_matrix_crs(void) {
    // Another test
    //vector<unsigned> rind, cind;
    //vector<double> vals;
-   //unsigned m = 10;
+   //unsigned m = 8;
    //rind.resize(m);
    //cind.resize(m);
    //vals.resize(m);
@@ -143,10 +147,12 @@ void test_matrix_crs(void) {
       vals.push_back(val_dist(e2));
    }
 
-   matrix_crs<double> crsmat(rind, cind, vals);
-   cout << crsmat << endl;
+   matrix_crs<double> crsmat(rind, cind, vals, m, n);
+   //cout << crsmat << endl;
 
    crsmat.print_full();
+
+   cout << crsmat.to_coo() << endl;
 
    // }}}
 }
