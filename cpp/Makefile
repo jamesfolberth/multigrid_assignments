@@ -11,16 +11,17 @@ MATLIB_COMMON= matrix_coo.cpp\
 					matrix_coo.hpp\
 					matrix_crs.cpp\
 					matrix_crs.hpp\
-					utils.hpp
+					utils.hpp\
+					utils.cpp\
 
 .PHONY: all clean
 
 all: test
 
-test: matrix_coo.o matrix_crs.o model_problems.o test.cpp force
+test: matrix_coo.o matrix_crs.o utils.o model_problems.o test.cpp force
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c test.cpp
 	$(CPP) $(CPPFLAGS) -flto $(LDLIBS) $(LDFLAGS) matrix_coo.o\
-		matrix_crs.o model_problems.o test.o -o test
+		matrix_crs.o utils.o model_problems.o test.o -o test
 	./test
 
 matrix_coo.o: $(MATLIB_COMMON)
@@ -28,6 +29,9 @@ matrix_coo.o: $(MATLIB_COMMON)
 
 matrix_crs.o: $(MATLIB_COMMON)
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c matrix_crs.cpp
+
+utils.o: utils.cpp utils.hpp
+	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c utils.cpp
 
 model_problems.o: $(MATLIB_COMMON) model_problems.cpp model_problems.hpp
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c model_problems.cpp

@@ -28,7 +28,6 @@ Maybe see what Armadillo does.
 
 TODO
 ====
-* Clean up test functions
 * Sparse add (COO, CRS)
 * Sparse kron (COO, CRS->COO->CRS)
 * Rewrite CRS clean to work in place

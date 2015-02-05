@@ -24,4 +24,9 @@
 #define MIN(a,b) (((a)<(b)) ? a : b)
 #define MAX(a,b) (((a)<(b)) ? b : a)
 
+//////////
+// Misc //
+//////////
+int pow(int b, int e);
+
 #endif

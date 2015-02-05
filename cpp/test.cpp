@@ -13,7 +13,124 @@
 
 using namespace std;
 
-void test_matrix_coo(void) {
+// Test helpers
+template<typename T>
+matrix_coo<T> rand_coo_rand_size(void) {
+   // {{{
+   random_device rd;
+   std::mt19937 e2(rd());
+   uniform_int_distribution<int> size_dist(1, 9);
+   uniform_real_distribution<T> val_dist(-99,99);
+
+   int m = size_dist(e2);
+   uniform_int_distribution<int> rind_dist(0,m);
+   int n = size_dist(e2);
+   uniform_int_distribution<int> cind_dist(0,n);
+
+   uniform_int_distribution<int> nnz_dist(0,(m+1)*(n+1));
+   int nnz = nnz_dist(e2);
+
+   vector<unsigned> rind, cind;
+   vector<T> vals;
+
+   for (int i=0; i< nnz; ++i) {
+      rind.push_back(rind_dist(e2));
+      cind.push_back(cind_dist(e2));
+      vals.push_back(val_dist(e2));
+   }
+
+   return matrix_coo<T>(rind, cind, vals, m, n);
+   // }}}
+}
+
+template<typename T>
+matrix_crs<T> rand_crs_rand_size(void) {
+   // {{{
+   random_device rd;
+   std::mt19937 e2(rd());
+   uniform_int_distribution<int> size_dist(1, 9);
+   uniform_real_distribution<T> val_dist(-99,99);
+
+   int m = size_dist(e2);
+   uniform_int_distribution<int> rind_dist(0,m);
+   int n = size_dist(e2);
+   uniform_int_distribution<int> cind_dist(0,n);
+
+   uniform_int_distribution<int> nnz_dist(0,(m+1)*(n+1));
+   int nnz = nnz_dist(e2);
+
+   vector<unsigned> rind, cind;
+   vector<T> vals;
+
+   for (int i=0; i< nnz; ++i) {
+      rind.push_back(rind_dist(e2));
+      cind.push_back(cind_dist(e2));
+      vals.push_back(val_dist(e2));
+   }
+
+   return matrix_crs<T>(rind, cind, vals, m, n);
+   // }}}
+}
+
+template<typename T>
+matrix_coo<T> rand_coo(unsigned m, unsigned n) {
+   // {{{
+   random_device rd;
+   std::mt19937 e2(rd());
+   uniform_real_distribution<T> val_dist(-99,99);
+
+
+   uniform_int_distribution<int> rind_dist(0,m-1);
+   uniform_int_distribution<int> cind_dist(0,n-1);
+
+   uniform_int_distribution<int> nnz_dist(0,m*n);
+   int nnz = nnz_dist(e2);
+
+   vector<unsigned> rind, cind;
+   vector<T> vals;
+
+   for (int i=0; i< nnz; ++i) {
+      rind.push_back(rind_dist(e2));
+      cind.push_back(cind_dist(e2));
+      vals.push_back(val_dist(e2));
+   }
+
+   return matrix_coo<T>(rind, cind, vals, m, n);
+   // }}}
+}
+
+template<typename T>
+matrix_crs<T> rand_crs(unsigned m, unsigned n) {
+   // {{{
+   random_device rd;
+   std::mt19937 e2(rd());
+   uniform_real_distribution<T> val_dist(-99,99);
+
+
+   uniform_int_distribution<int> rind_dist(0,m-1);
+   uniform_int_distribution<int> cind_dist(0,n-1);
+
+   uniform_int_distribution<int> nnz_dist(0,m*n);
+   int nnz = nnz_dist(e2);
+
+   vector<unsigned> rind, cind;
+   vector<T> vals;
+
+   for (int i=0; i< nnz; ++i) {
+      rind.push_back(rind_dist(e2));
+      cind.push_back(cind_dist(e2));
+      vals.push_back(val_dist(e2));
+   }
+
+   return matrix_crs<T>(rind, cind, vals, m, n);
+   // }}}
+}
+
+
+///////////////////////
+// COO test routines //
+///////////////////////
+void test_coo_matrix(void) {
    // {{{
    
    // Basic test
@@ -51,89 +168,62 @@ void test_matrix_coo(void) {
    //cout << coomat << endl;
 
 
-   // Build random mat
-   //random_device rd;
-   //std::mt19937 e2(rd());
-   //uniform_int_distribution<int> size_dist(1, 9);
-   //uniform_real_distribution<double> val_dist(-99,99);
-
-
-   //int m = size_dist(e2);
-   //uniform_int_distribution<int> rind_dist(0,m);
-   //int n = size_dist(e2);
-   //uniform_int_distribution<int> cind_dist(0,n);
-
-   //uniform_int_distribution<int> nnz_dist(0,(m+1)*(n+1));
-   //int nnz = nnz_dist(e2);
-
-   //vector<unsigned> rind, cind;
-   //vector<double> vals;
-
-   //for (int i=0; i< nnz; ++i) {
-   //   rind.push_back(rind_dist(e2));
-   //   cind.push_back(cind_dist(e2));
-   //   vals.push_back(val_dist(e2));
-   //}
-
-   //matrix_coo<double> coomat(rind, cind, vals, m, n);
-   //cout << coomat << endl;
-   ////coomat.print_full();
-
-   //cout << endl;
-   //cout << coomat.to_crs().to_coo() << endl;
-   ////coomat.to_crs().to_coo().print_full();
+   // Build random mat and print
+   //matrix_coo<double> A = rand_coo_rand_size<double>();
+   matrix_coo<double> A = rand_coo<double>(4,5);
+   cout << A << endl;
+   A.print_full();
    
+   // }}}
+}
 
-   // Test: eye_coo
-   //matrix_coo<double> I = eye_coo<double>(10,10);
-   //matrix_coo<double> I = eye_coo<double>(8,10);
-   //matrix_coo<double> I = eye_coo<double>(10,8);
-   //cout << I << endl;
-   //I.print_full(); 
-   
+void test_coo_eye(void) {
+   // {{{
 
-   // Test: scalar ops
-   //random_device rd;
-   //std::mt19937 e2(rd());
-   //uniform_int_distribution<int> size_dist(1, 9);
-   //uniform_real_distribution<double> val_dist(-99,99);
+   cout << "eye_coo(7,7) = " << endl;
+   matrix_coo<double> I = eye_coo<double>(7,7);
+   I.print_full(); 
 
+   cout << "eye_coo(5,7) = " << endl;
+   I = eye_coo<double>(5,7);
+   I.print_full();
 
-   //int m = size_dist(e2);
-   //uniform_int_distribution<int> rind_dist(0,m);
-   //int n = size_dist(e2);
-   //uniform_int_distribution<int> cind_dist(0,n);
-
-   //uniform_int_distribution<int> nnz_dist(0,(m+1)*(n+1));
-   //int nnz = nnz_dist(e2);
-
-   //vector<unsigned> rind, cind;
-   //vector<double> vals;
-
-   //for (int i=0; i< nnz; ++i) {
-   //   rind.push_back(rind_dist(e2));
-   //   cind.push_back(cind_dist(e2));
-   //   vals.push_back(val_dist(e2));
-   //}
-
-   //matrix_coo<double> A(rind, cind, vals, m, n);
-
-   //cout << A << endl;
-   ////A += 2.5;
-   ////A -= 2.5;
-   ////A *= 2.5;
-   ////A /= 2.5;
-
-   //A *= 0.;
-   //A.clean();
-   //
-   //cout << A << endl;
-
+   cout << "eye_coo(7,5) = " << endl;
+   I = eye_coo<double>(7,5);
+   I.print_full();
 
    // }}}
 }
 
-void test_matrix_crs(void) {
+void test_coo_scalar(void) {
+   // {{{
+   matrix_coo<double> A = rand_coo<double>(8,5);
+   matrix_coo<double> B = A;
+
+   cout << "A = " << endl;
+   B.print_full();
+
+   cout << "A += 2.5" << endl;
+   B += 2.5; B.print_full(); B = A;
+
+   cout << "A -= 2.5" << endl;
+   B -= 2.5; B.print_full(); B = A;
+
+   cout << "A *= 2.5" << endl;
+   B *= 2.5; B.print_full(); B = A;
+
+   cout << "A /= 2.5" << endl;
+   B /= 2.5; B.print_full(); B = A;
+
+   cout << "A *= 0.0 then A.clean()" << endl;
+   B *= 0; B.clean(); B.print_full(); B = A;
+   // }}}
+}
+
+///////////////////////
+// CRS test routines //
+///////////////////////
+void test_crs_matrix(void) {
    // {{{
 
    // Basic test
@@ -172,88 +262,62 @@ void test_matrix_crs(void) {
    //crsmat.print_full();
 
    // Build random mat
-   //random_device rd;
-   //std::mt19937 e2(rd());
-   //uniform_int_distribution<int> size_dist(1, 9);
-   //uniform_real_distribution<double> val_dist(-99,99);
-
-
-   //int m = size_dist(e2);
-   //uniform_int_distribution<int> rind_dist(0,m);
-   //int n = size_dist(e2);
-   //uniform_int_distribution<int> cind_dist(0,n);
-
-   //uniform_int_distribution<int> nnz_dist(0,(m+1)*(n+1));
-   //int nnz = nnz_dist(e2);
-
-   //vector<unsigned> rind, cind;
-   //vector<double> vals;
-
-   //for (int i=0; i< nnz; ++i) {
-   //   rind.push_back(rind_dist(e2));
-   //   cind.push_back(cind_dist(e2));
-   //   vals.push_back(val_dist(e2));
-   //}
-
-   //matrix_crs<double> crsmat(rind, cind, vals, m, n);
-   ////cout << crsmat << endl;
-
-   //crsmat.print_full();
-
-   //cout << crsmat.to_coo() << endl;
-   
-
-   // Test: eye_crs
-   //matrix_crs<double> I = eye_crs<double>(10,10);
-   //matrix_crs<double> I = eye_crs<double>(8,10);
-   //matrix_crs<double> I = eye_crs<double>(10,8);
-   //cout << I << endl;
-   //I.print_full(); 
-
-
-   // Test: scalar ops
-   random_device rd;
-   std::mt19937 e2(rd());
-   uniform_int_distribution<int> size_dist(1, 9);
-   uniform_real_distribution<double> val_dist(-99,99);
-
-
-   int m = size_dist(e2);
-   uniform_int_distribution<int> rind_dist(0,m);
-   int n = size_dist(e2);
-   uniform_int_distribution<int> cind_dist(0,n);
-
-   uniform_int_distribution<int> nnz_dist(0,(m+1)*(n+1));
-   int nnz = nnz_dist(e2);
-
-   vector<unsigned> rind, cind;
-   vector<double> vals;
-
-   for (int i=0; i< nnz; ++i) {
-      rind.push_back(rind_dist(e2));
-      cind.push_back(cind_dist(e2));
-      vals.push_back(val_dist(e2));
-   }
-
-   matrix_crs<double> A(rind, cind, vals, m, n);
-
+   //matrix_crs<double> A = rand_crs_rand_size<double>();
+   matrix_crs<double> A = rand_crs<double>(4,5);
    cout << A << endl;
-   //A += 2.5;
-   //A -= 2.5;
-   //A *= 2.5;
-   //A /= 2.5;
-
-   A *= 0.;
-   A.clean();
-   
-   cout << A << endl;
-
-
+   A.print_full();
 
    // }}}
 }
 
-void test_model_problem(void) {
+void test_crs_eye(void) {
+   // {{{
+
+   cout << "eye_crs(7,7) = " << endl;
+   matrix_crs<double> I = eye_crs<double>(7,7);
+   I.print_full(); 
+
+   cout << "eye_crs(5,7) = " << endl;
+   I = eye_crs<double>(5,7);
+   I.print_full();
+
+   cout << "eye_crs(7,5) = " << endl;
+   I = eye_crs<double>(7,5);
+   I.print_full();
+
+   // }}}
+}
+
+void test_crs_scalar(void) {
+   // {{{
+   matrix_crs<double> A = rand_crs<double>(8,5);
+   matrix_crs<double> B = A;
+
+   cout << "A = " << endl;
+   B.print_full();
+
+   cout << "A += 2.5" << endl;
+   B += 2.5; B.print_full(); B = A;
+
+   cout << "A -= 2.5" << endl;
+   B -= 2.5; B.print_full(); B = A;
+
+   cout << "A *= 2.5" << endl;
+   B *= 2.5; B.print_full(); B = A;
+
+   cout << "A /= 2.5" << endl;
+   B /= 2.5; B.print_full(); B = A;
+
+   cout << "A *= 0.0 then A.clean()" << endl;
+   B *= 0; B.clean(); B.print_full(); B = A;
+   // }}}
+}
+
+
+////////////////////
+// Model problems //
+////////////////////
+void test_model_problems(void) {
 
    matrix_crs<double> A1 = model_problem_1d<double>(3,1.);
    cout << A1 << endl;
@@ -263,9 +327,16 @@ void test_model_problem(void) {
 
 int main() {
    
-   //test_matrix_coo();
-   test_matrix_crs();
-   //test_model_problem();
+   //test_coo_matrix();
+   //test_coo_eye();
+   //test_coo_scalar();
+
+   //test_crs_matrix();
+   //test_crs_eye();
+   //test_crs_scalar();
+   
+
+   test_model_problems();
 
    return 0;
 }

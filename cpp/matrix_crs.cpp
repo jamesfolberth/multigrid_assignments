@@ -209,6 +209,7 @@ void matrix_crs<T>::print_full(void) {
       }
    }
 
+   cout << endl;
 }
 
 

@@ -63,17 +63,6 @@ matrix_crs<T> model_problem_1d(unsigned L, T sigma) {
 //}
 
 
-int pow(int b, int e) {
-   if ( e == 0 ) return 1;
-   else if ( e == 1 ) return b;
-   else if ( e < 0 ) {
-      cerr << "model_problems.cpp:pow: negative exponent not handled" << endl;
-      exit(-1);
-   }
-   else return pow(b, e-1);
-}
-
-
 // Force instantiation for specific types
 template matrix_crs<double> model_problem_1d<double>(unsigned,double);
 //template matrix_crs<double> model_problem_2d<double>(unsigned,double);
