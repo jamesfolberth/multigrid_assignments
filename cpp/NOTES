@@ -18,7 +18,18 @@ http://stackoverflow.com/questions/2902064/how-to-track-down-a-double-free-or-co
 
 Use valgrind!
 
+
+Overloading
+===========
+C++ doesn't allow for overloading based on return type.
+Easiest fix is to just change the function names.
+Maybe see what Armadillo does.
+
+
 TODO
 ====
-* Lots of stuff
+* Clean up test functions
+* Sparse add (COO, CRS)
+* Sparse kron (COO, CRS->COO->CRS)
+* Rewrite CRS clean to work in place
 

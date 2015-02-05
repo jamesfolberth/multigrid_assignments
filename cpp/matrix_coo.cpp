@@ -23,8 +23,8 @@ matrix_coo<T>::matrix_coo(
 
    if (val.size() == 0) {
       if (init_m == 0 && init_n == 0) {
-         cerr << "matrix_coo: Can't construct an empty (zero) matrix without "
-              << "specifying m and n!" << endl;
+         cerr << "error: matrix_coo: Can't construct an empty (zero) matrix "
+              << "without specifying m and n!" << endl;
          exit(-1);
       }
       m = init_m; n = init_n;
@@ -39,42 +39,19 @@ matrix_coo<T>::matrix_coo(
    assert(row_ind.size() == col_ind.size());
    assert(col_ind.size() == val.size());
 
-   this->sort_inds();
+   this->clean();
 }
 
-/////////////////////
-// Type conversion //
-/////////////////////
+// TODO should accept a combine function (default to lambda add) like
+// Julia's CSC
 template<typename T>
-matrix_crs<T> matrix_coo<T>::to_crs(void) {
-   return matrix_crs<T>(row_ind, col_ind, val, m, n);
-}
-
-
-////////////
-// Output //
-////////////
-template<typename T>
-void matrix_coo<T>::print_full(void) {
-   this->to_crs().print_full();
-//// print the matrix as a dense array (via converting to CRS)
-//   matrix_crs<T>* newmat = new matrix_crs<T>(this->row_ind, this->col_ind,
-//         this->val, this->m, this->n);
-//
-//   newmat->print_full();
-//   delete newmat;
-}
-
-
-// Utils (private)
-template<typename T>
-void matrix_coo<T>::sort_inds(void) {
+void matrix_coo<T>::clean(void) {
 // Reorder the row/col/vals so that they are in row-major order
 
    // Copy row inds, col inds, vals to vector of (i,j,val) tuples
    // Then sort vector of tuples with stdlib sort
    // Then overwrite values and remove duplicates
-   // This is probably going to be slow
+   // I don't know how fast this is
    
    struct sort_tuple {
       unsigned i;
@@ -105,8 +82,15 @@ void matrix_coo<T>::sort_inds(void) {
    // assign to class member and deal with duplicate entries by adding
    unsigned old_row=-1, old_col=-1, num_dups=0;
    for (unsigned i=0; i<sort_me.size(); ++i) {
+
+      if ( abs(sort_me[i].val) < _ELEMENT_ZERO_TOL_ ) {
+         num_dups += 1;
+         continue;
+      }
+
       // if not a duplicate (case i=0 always passes, since it's first)
       if (old_row != sort_me[i].i || old_col != sort_me[i].j) {
+
          row_ind[i-num_dups] = sort_me[i].i;
          col_ind[i-num_dups] = sort_me[i].j;
          val[i-num_dups] = sort_me[i].val;
@@ -114,16 +98,18 @@ void matrix_coo<T>::sort_inds(void) {
          old_row = sort_me[i].i;
          old_col = sort_me[i].j;
       }
+      
       else {
          num_dups += 1;
-         val[i-num_dups] += sort_me[i].val;
+         val[i-num_dups] += sort_me[i].val; // TODO combine function
          continue;
       }
    }
 
    if (num_dups > 0) {
-      cerr << "warning: matrix_coo::sort_inds duplicate entries found; "
-           << "combining entries by adding" << endl;
+      cerr << "warning: matrix_coo:clean: duplicate entries found or "
+           << "zeros; combining entries by adding and removing zero entries"
+           << endl;
    }
 
    row_ind.resize(row_ind.size()-num_dups);
@@ -132,10 +118,82 @@ void matrix_coo<T>::sort_inds(void) {
 }
 
 
+
+// TODO maybe move to seperate file?
+// special forms
+template<typename T>
+matrix_coo<T> eye_coo(unsigned m, unsigned n) {
+   vector<unsigned> rind(MIN(m,n)), cind(MIN(m,n));
+   vector<T> val(MIN(m,n), static_cast<T>(1)); // fill val with 1s on construct
+
+   for (unsigned i=0; i < rind.size(); ++i) {
+      rind[i] = i;
+      cind[i] = i;
+   }
+
+   return matrix_coo<T>(rind, cind, val, m, n);
+}
+
+
+////////////////
+// Operations //
+////////////////
+// scalar
+template<typename T>
+matrix_coo<T>& matrix_coo<T>::operator+=(const T& value) {
+   for (auto it=val.begin(); it != val.end(); ++it) {
+      *it += value;
+   }
+   return *this;
+}
+
+template<typename T>
+matrix_coo<T>& matrix_coo<T>::operator-=(const T& value) {
+   for (auto it=val.begin(); it != val.end(); ++it) {
+      *it -= value;
+   }
+   return *this;
+}
+
+template<typename T>
+matrix_coo<T>& matrix_coo<T>::operator*=(const T& value) {
+   for (auto it=val.begin(); it != val.end(); ++it) {
+      *it *= value;
+   }
+   return *this;
+}
+
+template<typename T>
+matrix_coo<T>& matrix_coo<T>::operator/=(const T& value) {
+   for (auto it=val.begin(); it != val.end(); ++it) {
+      *it /= value;
+   }
+   return *this;
+}
+
+/////////////////////
+// Type conversion //
+/////////////////////
+template<typename T>
+matrix_crs<T> matrix_coo<T>::to_crs(void) {
+   return matrix_crs<T>(row_ind, col_ind, val, m, n);
+}
+
+
+////////////
+// Output //
+////////////
+template<typename T>
+void matrix_coo<T>::print_full(void) {
+   this->to_crs().print_full();
+}
+
+
 // Some template functions are defined in the header
 // I couldn't get things to work any other way
 
 // Force instantiation for specific types
-//template class matrix_coo<float>;
+// double
 template class matrix_coo<double>;
+template matrix_coo<double> eye_coo<double>(unsigned, unsigned);
 

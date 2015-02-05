@@ -17,4 +17,11 @@
 #define _PRINT_FULL_PREC_ 4
 #define _PRINT_FULL_WIDTH_ 10
 
+#define _ELEMENT_ZERO_TOL_ 10e-14
+
+
+// misc
+#define MIN(a,b) (((a)<(b)) ? a : b)
+#define MAX(a,b) (((a)<(b)) ? b : a)
+
 #endif

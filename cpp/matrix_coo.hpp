@@ -48,10 +48,26 @@ class matrix_coo {
                  vector<T>& init_val,
                  size_t init_m=0, size_t init_n=0);
 
+      // copy, move, destruct
       matrix_coo<T>(const matrix_coo<T>& ) = default;
       matrix_coo<T>& operator=(const matrix_coo<T>& ) = default;
-
+      matrix_coo<T>(matrix_coo<T>&& ) = default;
+      matrix_coo<T>& operator=(matrix_coo<T>&& ) = default;
       ~matrix_coo<T>() = default;
+
+      // clean up storage (sort inds, deal with duplicates,
+      // remove elements below _ELEMENT_ZERO_TOL_)
+      void clean(void);
+
+
+      ////////////////
+      // Operations //
+      ////////////////
+      // scalar
+      matrix_coo<T>& operator+=(const T& value);
+      matrix_coo<T>& operator-=(const T& value);
+      matrix_coo<T>& operator*=(const T& value);
+      matrix_coo<T>& operator/=(const T& value);
 
       /////////////////////
       // Type conversion //
@@ -67,11 +83,18 @@ class matrix_coo {
 
       void print_full(void);
  
-   private:
-      void sort_inds(void);
- 
 };
 
+//////////////////////////
+// Special Constructors //
+//////////////////////////
+template<typename T>
+matrix_coo<T> eye_coo(unsigned m, unsigned n);
+
+
+////////////
+// Output //
+////////////
 template <typename T>
 ostream& operator<<(ostream& os, const matrix_coo<T>& mat) {
 
@@ -80,19 +103,21 @@ ostream& operator<<(ostream& os, const matrix_coo<T>& mat) {
 
    if ( _DEBUG_ >=1 ) {
       os << "debug 1: COO ostream printing" << endl;
-      os << "row_ind: ";
+      os << "debug 1: row_ind: ";
       for (unsigned i=0; i < mat.row_ind.size(); ++i)
          cout << mat.row_ind[i] << "  ";
       os << endl;
-      os << "col_ind: ";
+      os << "debug 1: col_ind: ";
       for (unsigned i=0; i < mat.col_ind.size(); ++i)
          cout << mat.col_ind[i] << "  ";
       os << endl;
-      os << "val:     ";
+      os << "debug 1: val:     ";
       for (unsigned i=0; i < mat.val.size(); ++i)
          cout << setprecision(_PRINT_SPARSE_PREC_) << mat.val[i] << "  ";
       os << endl;
    }
+
+   if ( mat.val.size() == 0 ) os << "Empty matrix";
 
    for ( unsigned i=0; i < mat.row_ind.size(); ++i) {
       os << "  (" << mat.row_ind[i] << ", " << mat.col_ind[i]

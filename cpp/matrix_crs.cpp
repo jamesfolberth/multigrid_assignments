@@ -93,6 +93,67 @@ matrix_crs<T>::matrix_crs(
 }
 
 
+// TODO do this in place on the CRS data instead of converting and cleaning
+template<typename T>
+void matrix_crs<T>::clean(void) {
+   matrix_coo<T> temp = this->to_coo();
+   *this = temp.to_crs();
+}
+
+
+// TODO maybe move to seperate file?
+// special forms
+template<typename T>
+matrix_crs<T> eye_crs(unsigned m, unsigned n) {
+   vector<unsigned> rind(MIN(m,n)), cind(MIN(m,n));
+   vector<T> val(MIN(m,n), static_cast<T>(1)); // fill val with 1s on construct
+
+   for (unsigned i=0; i < rind.size(); ++i) {
+      rind[i] = i;
+      cind[i] = i;
+   }
+
+   return matrix_crs<T>(rind, cind, val, m, n);
+}
+
+
+////////////////
+// Operations //
+////////////////
+// scalar
+template<typename T>
+matrix_crs<T>& matrix_crs<T>::operator+=(const T& value) {
+   for (auto it=val.begin(); it != val.end(); ++it) {
+      *it += value;
+   }
+   return *this;
+}
+
+template<typename T>
+matrix_crs<T>& matrix_crs<T>::operator-=(const T& value) {
+   for (auto it=val.begin(); it != val.end(); ++it) {
+      *it -= value;
+   }
+   return *this;
+}
+
+template<typename T>
+matrix_crs<T>& matrix_crs<T>::operator*=(const T& value) {
+   for (auto it=val.begin(); it != val.end(); ++it) {
+      *it *= value;
+   }
+   return *this;
+}
+
+template<typename T>
+matrix_crs<T>& matrix_crs<T>::operator/=(const T& value) {
+   for (auto it=val.begin(); it != val.end(); ++it) {
+      *it /= value;
+   }
+   return *this;
+}
+
+
 /////////////////////
 // Type conversion //
 /////////////////////
@@ -110,10 +171,10 @@ matrix_coo<T> matrix_crs<T>::to_coo(void) {
 }
 
 
-template<typename T>
-matrix_crs<T> matrix_crs<T>::to_crs(void) {
-   return *this;
-}
+//template<typename T>
+//matrix_crs<T> matrix_crs<T>::to_crs(void) {
+//   return *this;
+//}
 
 
 
@@ -155,6 +216,7 @@ void matrix_crs<T>::print_full(void) {
 // I couldn't get things to work any other way
 
 // Force instantiation for specific types
-//template class matrix_crs<float>;
+// double
 template class matrix_crs<double>;
+template matrix_crs<double> eye_crs<double>(unsigned,unsigned);
 

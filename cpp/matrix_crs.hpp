@@ -48,10 +48,24 @@ class matrix_crs {
                  vector<T>& init_val,
                  size_t init_m=0, size_t init_n=0);
 
+      // copy, move, destruct
       matrix_crs<T>(const matrix_crs<T>& ) = default;
       matrix_crs<T>& operator=(const matrix_crs<T>& ) = default;
+      matrix_crs<T>(matrix_crs<T>&& ) = default;
+      matrix_crs<T>& operator=(matrix_crs<T>&& ) = default;
+      ~matrix_crs<T>() = default;
 
-      ~matrix_crs<T>() = default;// {cout << "delete me!" << endl;};
+      void clean(void);
+
+      ////////////////
+      // Operations //
+      ////////////////
+      // scalar
+      matrix_crs<T>& operator+=(const T& value);
+      matrix_crs<T>& operator-=(const T& value);
+      matrix_crs<T>& operator*=(const T& value);
+      matrix_crs<T>& operator/=(const T& value);
+
 
       /////////////////////
       // Type conversion //
@@ -67,10 +81,15 @@ class matrix_crs {
 
       void print_full(void);
  
-   private:
-      void sort_inds(void);
- 
 };
+
+
+//////////////////////////
+// Special Constructors //
+//////////////////////////
+template<typename T>
+matrix_crs<T> eye_crs(unsigned m, unsigned n);
+
 
 template <typename T>
 ostream& operator<<(ostream& os, const matrix_crs<T>& mat) {
@@ -80,19 +99,21 @@ ostream& operator<<(ostream& os, const matrix_crs<T>& mat) {
 
    if ( _DEBUG_ >= 1 ) {
       os << "debug 1: CRS ostream printing" << endl;
-      os << "row_ptr: ";
+      os << "debug 1: row_ptr: ";
       for (unsigned i=0; i<mat.row_ptr.size(); ++i)
          os << mat.row_ptr[i] << "  ";
       os << endl;
-      os << "col_ind: ";
+      os << "debug 1: col_ind: ";
       for (unsigned i=0; i<mat.col_ind.size(); ++i)
          os << mat.col_ind[i] << "  ";
       os << endl;
-      os << "val:     ";
+      os << "debug 1: val:     ";
       for (unsigned i=0; i<mat.val.size(); ++i)
          os << mat.val[i] << "  ";
       os << endl;
    }
+
+   if ( mat.val.size() == 0 ) os << "Empty matrix";
 
    for (unsigned i=0; i<mat.m; ++i) {
       for (unsigned j=mat.row_ptr[i]; j<mat.row_ptr[i+1]; ++j) {
