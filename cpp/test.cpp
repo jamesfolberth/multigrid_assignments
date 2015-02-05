@@ -313,6 +313,27 @@ void test_crs_scalar(void) {
    // }}}
 }
 
+void test_crs_add(void) {
+   // {{{
+   matrix_crs<double> A = rand_crs<double>(3,5);
+   matrix_crs<double> B = rand_crs<double>(3,5);
+   //matrix_crs<double> B = A; B *= -1.0;
+
+   cout << "A = " << endl;
+   //cout << A << endl;
+   A.print_full();
+
+   cout << "B = " << endl;
+   //cout << B << endl;
+   B.print_full();
+
+   cout << "A += B" << endl;
+   A += B;
+   //cout << A << endl;
+   A.print_full();
+   // }}}
+}
+
 
 ////////////////////
 // Model problems //
@@ -326,17 +347,20 @@ void test_model_problems(void) {
 }
 
 int main() {
-   
+  
+   // COO
    //test_coo_matrix();
    //test_coo_eye();
    //test_coo_scalar();
 
+   // CRS
    //test_crs_matrix();
    //test_crs_eye();
    //test_crs_scalar();
+   test_crs_add();
    
-
-   test_model_problems();
+   // Model problems
+   //test_model_problems();
 
    return 0;
 }

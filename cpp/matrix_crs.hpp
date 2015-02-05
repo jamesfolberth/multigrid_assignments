@@ -66,6 +66,9 @@ class matrix_crs {
       matrix_crs<T>& operator*=(const T& value);
       matrix_crs<T>& operator/=(const T& value);
 
+      // matrix add/sub
+      matrix_crs<T>& operator+=(const matrix_crs<T>& B);
+
 
       /////////////////////
       // Type conversion //

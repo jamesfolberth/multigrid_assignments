@@ -153,6 +153,108 @@ matrix_crs<T>& matrix_crs<T>::operator/=(const T& value) {
    return *this;
 }
 
+// matrix add
+// *this += B;
+template<typename T>
+matrix_crs<T>& matrix_crs<T>::operator+=(const matrix_crs<T>& B) {
+   unsigned this_col_ind;
+
+   // check sizes
+   if ( m != B.m || n != B.n ) {
+      cerr << "error: matrix_crs:+=: matrix sizes do not match - ("
+           << m << "," << n << ") vs. ("
+           << B.m << "," << B.n << ")" << endl;
+      exit(-1);
+   }
+
+   // if empty mat, do nothing
+   if ( val.size() == 0 ) {
+      return *this;
+   }
+
+   // loop through rows
+   for (unsigned row=0; row < m; ++row) {
+      this_col_ind = row_ptr[row];
+    
+      // for each row, loop through column indexes of B
+      // keep a column index of *this to compare with the column index of B
+      for (unsigned B_col_ind = B.row_ptr[row];
+            B_col_ind < B.row_ptr[row+1];
+            ++B_col_ind) {
+
+         // increase this_col_ind until we hit the end of the row
+         // or an entry of B 
+         while ( this_col_ind < row_ptr[row+1] && 
+                 col_ind[this_col_ind] < B.col_ind[B_col_ind] )
+            ++this_col_ind; 
+
+         // this_col_ind still in the row
+         if ( this_col_ind < row_ptr[row+1] ) {
+
+            // entry in *this and B - add them
+            if ( col_ind[this_col_ind] == B.col_ind[B_col_ind] ) {
+               val[this_col_ind] += B.val[B_col_ind];
+
+               // if val below _ELEMENT_ZERO_TOL_, remove it
+               if ( abs(val[this_col_ind]) < _ELEMENT_ZERO_TOL_ ) {
+                  col_ind.erase(col_ind.begin()+this_col_ind);
+                  val.erase(val.begin()+this_col_ind);
+
+                  for (unsigned r=row+1; r<=m; ++r) {
+                     row_ptr[r] -= 1;
+                  }
+               }
+               continue;
+            }
+            
+            // entry in B before *this - insert entry 
+            // Note: this could be an else, instead of else if; the cases
+            // are exhaustive
+            else if ( col_ind[this_col_ind] > B.col_ind[B_col_ind] ) {
+               col_ind.insert(col_ind.begin()+this_col_ind,
+                     B.col_ind[B_col_ind]);
+               val.insert(val.begin()+this_col_ind,
+                     B.val[B_col_ind]);
+
+               // fix row pointers
+               for (unsigned r=row; r <= m; ++r) {
+                  row_ptr[r] += 1;
+               }
+               continue;
+            }
+
+            else {
+               cerr << "error: matrix_crs:+=: I have reached an impossible "
+                    << "state!  Dying!" << endl;
+               exit(-1);
+            }
+         }
+
+         // this_col_ind is not still in the row (i.e. it's in the next row)
+         // still need to insert entry of B. 
+         else {
+            // can't have entry in *this and B, since past row of *this
+            // Thus, insert entry of B
+            col_ind.insert(col_ind.begin()+this_col_ind,
+                  B.col_ind[B_col_ind]);
+            val.insert(val.begin()+this_col_ind,
+                  B.val[B_col_ind]);
+
+            // fix row pointers
+            for (unsigned r=row; r <= m; ++r) {
+               row_ptr[r] += 1;
+            }
+         }
+      }
+   }
+
+   return *this;
+}
+
+
+
+
+
 
 /////////////////////
 // Type conversion //

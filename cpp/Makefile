@@ -14,15 +14,17 @@ MATLIB_COMMON= matrix_coo.cpp\
 					utils.hpp\
 					utils.cpp\
 
-.PHONY: all clean
+.PHONY: all clean run
 
-all: test
+all: test run
 
-test: matrix_coo.o matrix_crs.o utils.o model_problems.o test.cpp force
+run: test
+	./test
+
+test: matrix_coo.o matrix_crs.o utils.o model_problems.o test.cpp
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c test.cpp
 	$(CPP) $(CPPFLAGS) -flto $(LDLIBS) $(LDFLAGS) matrix_coo.o\
 		matrix_crs.o utils.o model_problems.o test.o -o test
-	./test
 
 matrix_coo.o: $(MATLIB_COMMON)
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c matrix_coo.cpp
