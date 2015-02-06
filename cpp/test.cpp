@@ -296,20 +296,24 @@ void test_crs_scalar(void) {
    cout << "A = " << endl;
    B.print_full();
 
-   cout << "A += 2.5" << endl;
-   B += 2.5; B.print_full(); B = A;
-
-   cout << "A -= 2.5" << endl;
-   B -= 2.5; B.print_full(); B = A;
-
    cout << "A *= 2.5" << endl;
    B *= 2.5; B.print_full(); B = A;
+
+   cout << "2.5*A" << endl;
+   (2.5*A).print_full();
+
+   cout << "A*2.5" << endl;
+   (A*2.5).print_full();
+
+   cout << "A *= 0.0 then A.clean()" << endl;
+   B *= 0; B.clean(); cout << B << endl; B = A;
 
    cout << "A /= 2.5" << endl;
    B /= 2.5; B.print_full(); B = A;
 
-   cout << "A *= 0.0 then A.clean()" << endl;
-   B *= 0; B.clean(); B.print_full(); B = A;
+   cout << "A/2.5" << endl;
+   (A/2.5).print_full();
+
    // }}}
 }
 
@@ -327,10 +331,23 @@ void test_crs_add(void) {
    //cout << B << endl;
    B.print_full();
 
-   cout << "A += B" << endl;
-   A += B;
+   cout << "C = A + B" << endl;
+   matrix_crs<double> C = A + B;
    //cout << A << endl;
-   A.print_full();
+   C.print_full();
+
+   cout << "A += B" << endl;
+   C = A; C += B;
+   //cout << C << endl;
+   C.print_full();
+
+   cout << "A -= B" << endl;
+   C = A; C -= B;
+   //cout << C << endl;
+   C.print_full();
+
+
+
    // }}}
 }
 

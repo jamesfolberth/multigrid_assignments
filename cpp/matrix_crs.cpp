@@ -93,11 +93,34 @@ matrix_crs<T>::matrix_crs(
 }
 
 
-// TODO do this in place on the CRS data instead of converting and cleaning
+// Remove zero entries.  This assumes a proper CRS format was input
 template<typename T>
 void matrix_crs<T>::clean(void) {
-   matrix_coo<T> temp = this->to_coo();
-   *this = temp.to_crs();
+   unsigned ind=0;
+
+   if ( val.size() == 0 ) return; // nothing to do
+
+   for (unsigned row=0; row < m; ++row) {
+      while (val.size() > 0 && ind < row_ptr[row+1]) {
+         if ( abs(val[ind]) < _ELEMENT_ZERO_TOL_ ) {
+            col_ind.erase(col_ind.begin() + ind);
+            val.erase(val.begin() + ind);
+
+            // fix row pointers
+            for (unsigned r=row+1; r <= m; ++r) {
+               row_ptr[r] -= 1;
+            }
+            continue;
+         }
+         ++ind;
+      }
+   }
+}
+
+// Hopefully don't have to use this
+template<typename T>
+inline void matrix_crs<T>::deepclean(void) {
+   *this = (this->to_coo()).to_crs();
 }
 
 
@@ -122,28 +145,23 @@ matrix_crs<T> eye_crs(unsigned m, unsigned n) {
 ////////////////
 // scalar
 template<typename T>
-matrix_crs<T>& matrix_crs<T>::operator+=(const T& value) {
-   for (auto it=val.begin(); it != val.end(); ++it) {
-      *it += value;
-   }
-   return *this;
-}
-
-template<typename T>
-matrix_crs<T>& matrix_crs<T>::operator-=(const T& value) {
-   for (auto it=val.begin(); it != val.end(); ++it) {
-      *it -= value;
-   }
-   return *this;
-}
-
-template<typename T>
 matrix_crs<T>& matrix_crs<T>::operator*=(const T& value) {
    for (auto it=val.begin(); it != val.end(); ++it) {
       *it *= value;
    }
    return *this;
 }
+
+template<typename T>
+inline matrix_crs<T> operator*(const matrix_crs<T>& lhs, const T& rhs) {
+   return matrix_crs<T>(lhs) *= rhs;
+}
+
+template<typename T>
+inline matrix_crs<T> operator*(const T& lhs, const matrix_crs<T>& rhs) {
+   return matrix_crs<T>(rhs) *= lhs;
+}
+
 
 template<typename T>
 matrix_crs<T>& matrix_crs<T>::operator/=(const T& value) {
@@ -153,7 +171,14 @@ matrix_crs<T>& matrix_crs<T>::operator/=(const T& value) {
    return *this;
 }
 
-// matrix add
+template<typename T>
+inline matrix_crs<T> operator/(const matrix_crs<T>& lhs, const T& rhs) {
+   return matrix_crs<T>(lhs) /= rhs;
+}
+
+
+
+// matrix add/sub
 // *this += B;
 template<typename T>
 matrix_crs<T>& matrix_crs<T>::operator+=(const matrix_crs<T>& B) {
@@ -165,11 +190,6 @@ matrix_crs<T>& matrix_crs<T>::operator+=(const matrix_crs<T>& B) {
            << m << "," << n << ") vs. ("
            << B.m << "," << B.n << ")" << endl;
       exit(-1);
-   }
-
-   // if empty mat, do nothing
-   if ( val.size() == 0 ) {
-      return *this;
    }
 
    // loop through rows
@@ -251,7 +271,20 @@ matrix_crs<T>& matrix_crs<T>::operator+=(const matrix_crs<T>& B) {
    return *this;
 }
 
+template<typename T>
+matrix_crs<T> operator+(const matrix_crs<T>& lhs, const matrix_crs<T>& rhs) {
+   return matrix_crs<T>(lhs) += rhs;
+}
 
+template<typename T>
+matrix_crs<T>& matrix_crs<T>::operator-=(const matrix_crs<T>& B) {
+   return (*this += -1.0*B);
+}
+
+template<typename T>
+matrix_crs<T> operator-(const matrix_crs<T>& lhs, const matrix_crs<T>& rhs) {
+   return matrix_crs<T>(lhs) -= rhs;
+}
 
 
 
@@ -272,11 +305,10 @@ matrix_coo<T> matrix_crs<T>::to_coo(void) {
    return matrix_coo<T>(new_row_ind, col_ind, val, m, n);
 }
 
-
-//template<typename T>
-//matrix_crs<T> matrix_crs<T>::to_crs(void) {
-//   return *this;
-//}
+template<typename T>
+inline matrix_crs<T> matrix_crs<T>::to_crs(void) {
+   return *this;
+}
 
 
 
@@ -314,12 +346,21 @@ void matrix_crs<T>::print_full(void) {
    cout << endl;
 }
 
-
-// Some template functions are defined in the header
-// I couldn't get things to work any other way
-
-// Force instantiation for specific types
+// TODO is there a better way?
+////////////////////////////////////////////
+// Force instantiation for specific types //
+////////////////////////////////////////////
 // double
+/////////
 template class matrix_crs<double>;
 template matrix_crs<double> eye_crs<double>(unsigned,unsigned);
+
+template matrix_crs<double> operator*(const matrix_crs<double>&,const double&);
+template matrix_crs<double> operator*(const double&,const matrix_crs<double>&);
+template matrix_crs<double> operator/(const matrix_crs<double>&,const double&);
+
+template matrix_crs<double> operator+(const matrix_crs<double>&,
+                                      const matrix_crs<double>&);
+template matrix_crs<double> operator-(const matrix_crs<double>&,
+                                      const matrix_crs<double>&);
 

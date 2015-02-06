@@ -56,18 +56,19 @@ class matrix_crs {
       ~matrix_crs<T>() = default;
 
       void clean(void);
+      void deepclean(void); // calls COO clean; hopefully shouldn't use
 
       ////////////////
       // Operations //
       ////////////////
       // scalar
-      matrix_crs<T>& operator+=(const T& value);
-      matrix_crs<T>& operator-=(const T& value);
+      // Didn't implement +=, + as that would obliterate sparsity
       matrix_crs<T>& operator*=(const T& value);
       matrix_crs<T>& operator/=(const T& value);
 
       // matrix add/sub
       matrix_crs<T>& operator+=(const matrix_crs<T>& B);
+      matrix_crs<T>& operator-=(const matrix_crs<T>& B);
 
 
       /////////////////////
@@ -85,6 +86,30 @@ class matrix_crs {
       void print_full(void);
  
 };
+
+///////////////////////////
+// Non-member Operations //
+///////////////////////////
+// scalar
+template<typename T>
+matrix_crs<T> operator*(const matrix_crs<T>& lhs, const T& rhs);
+
+template<typename T>
+matrix_crs<T> operator*(const T& lhs, const matrix_crs<T>& rhs);
+
+template<typename T>
+matrix_crs<T> operator/(const matrix_crs<T>& lhs, const T& rhs);
+
+
+// matrix add/sub
+template<typename T>
+matrix_crs<T> operator+(const matrix_crs<T>& lhs, const matrix_crs<T>& rhs);
+
+template<typename T>
+matrix_crs<T> operator-(const matrix_crs<T>& lhs, const matrix_crs<T>& rhs);
+
+
+
 
 
 //////////////////////////
