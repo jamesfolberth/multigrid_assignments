@@ -117,7 +117,7 @@ void matrix_crs<T>::clean(void) {
    }
 }
 
-// Hopefully don't have to use this
+// Hopefully don't have to use this 'cuz everything is out of order
 template<typename T>
 inline void matrix_crs<T>::deepclean(void) {
    *this = (this->to_coo()).to_crs();
@@ -182,7 +182,15 @@ inline matrix_crs<T> operator/(const matrix_crs<T>& lhs, const T& rhs) {
 // *this += B;
 template<typename T>
 matrix_crs<T>& matrix_crs<T>::operator+=(const matrix_crs<T>& B) {
-   unsigned this_col_ind;
+   //unsigned this_col_ind;
+   unsigned ptrA, stopA, ptrB, stopB, ptrS;
+   unsigned colA, colB;
+
+   vector<unsigned> row_ptrS(m+1);
+   vector<unsigned> col_indS(this->val.size() + B.val.size());
+   vector<T> valS(this->val.size() + B.val.size());
+   // Note: this->val.size() + B.val.size() is an upper bound on the number of
+   // nonzeros in the result A+B.  We'll resize at the end;
 
    // check sizes
    if ( m != B.m || n != B.n ) {
@@ -192,81 +200,154 @@ matrix_crs<T>& matrix_crs<T>::operator+=(const matrix_crs<T>& B) {
       exit(-1);
    }
 
-   // loop through rows
+   colA = 0; colB = 0; // to get -Wall to shut up
+   ptrS = 0;
+
+   // similar to Julia's version
+   // This doesn't work in place; it returns a new matrix
+   // It's still a lot faster than the one I wrote!
    for (unsigned row=0; row < m; ++row) {
-      this_col_ind = row_ptr[row];
-    
-      // for each row, loop through column indexes of B
-      // keep a column index of *this to compare with the column index of B
-      for (unsigned B_col_ind = B.row_ptr[row];
-            B_col_ind < B.row_ptr[row+1];
-            ++B_col_ind) {
+      ptrA = row_ptr[row];
+      stopA = row_ptr[row+1];
+      ptrB = B.row_ptr[row];
+      stopB = B.row_ptr[row+1];
 
-         // increase this_col_ind until we hit the end of the row
-         // or an entry of B 
-         while ( this_col_ind < row_ptr[row+1] && 
-                 col_ind[this_col_ind] < B.col_ind[B_col_ind] )
-            ++this_col_ind; 
+      while ( ptrA < stopA && ptrB < stopB ) {
+         colA = col_ind[ptrA];
+         colB = B.col_ind[ptrB];
 
-         // this_col_ind still in the row
-         if ( this_col_ind < row_ptr[row+1] ) {
-
-            // entry in *this and B - add them
-            if ( col_ind[this_col_ind] == B.col_ind[B_col_ind] ) {
-               val[this_col_ind] += B.val[B_col_ind];
-
-               // if val below _ELEMENT_ZERO_TOL_, remove it
-               if ( abs(val[this_col_ind]) < _ELEMENT_ZERO_TOL_ ) {
-                  col_ind.erase(col_ind.begin()+this_col_ind);
-                  val.erase(val.begin()+this_col_ind);
-
-                  for (unsigned r=row+1; r<=m; ++r) {
-                     row_ptr[r] -= 1;
-                  }
-               }
-               continue;
-            }
-            
-            // entry in B before *this - insert entry 
-            // Note: this could be an else, instead of else if; the cases
-            // are exhaustive
-            else if ( col_ind[this_col_ind] > B.col_ind[B_col_ind] ) {
-               col_ind.insert(col_ind.begin()+this_col_ind,
-                     B.col_ind[B_col_ind]);
-               val.insert(val.begin()+this_col_ind,
-                     B.val[B_col_ind]);
-
-               // fix row pointers
-               for (unsigned r=row; r <= m; ++r) {
-                  row_ptr[r] += 1;
-               }
-               continue;
-            }
-
-            else {
-               cerr << "error: matrix_crs:+=: I have reached an impossible "
-                    << "state!  Dying!" << endl;
-               exit(-1);
-            }
+         // entry in *this (A) comes first
+         if ( colA < colB ) {
+            col_indS[ptrS] = colA;
+            valS[ptrS] = val[ptrA];
+            ptrS += 1;
+            ptrA += 1;
          }
 
-         // this_col_ind is not still in the row (i.e. it's in the next row)
-         // still need to insert entry of B. 
-         else {
-            // can't have entry in *this and B, since past row of *this
-            // Thus, insert entry of B
-            col_ind.insert(col_ind.begin()+this_col_ind,
-                  B.col_ind[B_col_ind]);
-            val.insert(val.begin()+this_col_ind,
-                  B.val[B_col_ind]);
+         // entry in B comes first
+         else if ( colA > colB) {
+            col_indS[ptrS] = colB;
+            valS[ptrS] = B.val[ptrB];
+            ptrS += 1;
+            ptrB += 1;
+         }
 
-            // fix row pointers
-            for (unsigned r=row; r <= m; ++r) {
-               row_ptr[r] += 1;
-            }
+         else {
+            col_indS[ptrS] = colA;
+            valS[ptrS] = val[ptrA] + B.val[ptrB];
+
+            // if nonzero element, then add it; if not, it'll get overwritten
+            // or put past the end of the value vector
+            if ( abs(valS[ptrS]) > _ELEMENT_ZERO_TOL_ )
+               ptrS += 1;
+
+            ptrA += 1;
+            ptrB += 1;
          }
       }
+
+      while ( ptrA < stopA ) {
+         col_indS[ptrS] = col_ind[ptrA];
+         valS[ptrS] = val[ptrA];
+         ptrS += 1;
+         ptrA += 1;
+      }
+
+      while ( ptrB < stopB ) {
+         col_indS[ptrS] = B.col_ind[ptrB];
+         valS[ptrS] = B.val[ptrB];
+         ptrS += 1;
+         ptrB += 1;
+      }
+      
+      row_ptrS[row+1] = ptrS;
    }
+
+   col_indS.resize(ptrS);
+   valS.resize(ptrS);
+
+   row_ptr = row_ptrS;
+   col_ind = col_indS;
+   val = valS;
+
+   return *this;
+
+   //// James' version
+   //// loop through rows
+   //for (unsigned row=0; row < m; ++row) {
+   //   this_col_ind = row_ptr[row];
+   // 
+   //   // for each row, loop through column indexes of B
+   //   // keep a column index of *this to compare with the column index of B
+   //   for (unsigned B_col_ind = B.row_ptr[row];
+   //         B_col_ind < B.row_ptr[row+1];
+   //         ++B_col_ind) {
+
+   //      // increase this_col_ind until we hit the end of the row
+   //      // or an entry of B 
+   //      while ( this_col_ind < row_ptr[row+1] && 
+   //              col_ind[this_col_ind] < B.col_ind[B_col_ind] )
+   //         ++this_col_ind; 
+
+   //      // this_col_ind still in the row
+   //      if ( this_col_ind < row_ptr[row+1] ) {
+
+   //         // entry in *this and B - add them
+   //         if ( col_ind[this_col_ind] == B.col_ind[B_col_ind] ) {
+   //            val[this_col_ind] += B.val[B_col_ind];
+
+   //            // if val below _ELEMENT_ZERO_TOL_, remove it
+   //            if ( abs(val[this_col_ind]) < _ELEMENT_ZERO_TOL_ ) {
+   //               col_ind.erase(col_ind.begin()+this_col_ind);
+   //               val.erase(val.begin()+this_col_ind);
+
+   //               for (unsigned r=row+1; r<=m; ++r) {
+   //                  row_ptr[r] -= 1;
+   //               }
+   //            }
+   //            continue;
+   //         }
+   //         
+   //         // entry in B before *this - insert entry 
+   //         // Note: this could be an else, instead of else if; the cases
+   //         // are exhaustive
+   //         else if ( col_ind[this_col_ind] > B.col_ind[B_col_ind] ) {
+   //            col_ind.insert(col_ind.begin()+this_col_ind,
+   //                  B.col_ind[B_col_ind]);
+   //            val.insert(val.begin()+this_col_ind,
+   //                  B.val[B_col_ind]);
+
+   //            // fix row pointers
+   //            for (unsigned r=row; r <= m; ++r) {
+   //               row_ptr[r] += 1;
+   //            }
+   //            continue;
+   //         }
+
+   //         else {
+   //            cerr << "error: matrix_crs:+=: I have reached an impossible "
+   //                 << "state!  Dying!" << endl;
+   //            exit(-1);
+   //         }
+   //      }
+
+   //      // this_col_ind is not still in the row (i.e. it's in the next row)
+   //      // still need to insert entry of B. 
+   //      else {
+   //         // can't have entry in *this and B, since past row of *this
+   //         // Thus, insert entry of B
+   //         col_ind.insert(col_ind.begin()+this_col_ind,
+   //               B.col_ind[B_col_ind]);
+   //         val.insert(val.begin()+this_col_ind,
+   //               B.val[B_col_ind]);
+
+   //         // fix row pointers
+   //         for (unsigned r=row; r <= m; ++r) {
+   //            row_ptr[r] += 1;
+   //         }
+   //      }
+   //   }
+   //}
 
    return *this;
 }
@@ -324,7 +405,10 @@ void matrix_crs<T>::print_full(void) {
       for (unsigned c=0; c<n; ++c) {
 
          // we've hit a nonzero in this row
-         if (col_ind.size() > 0 && c == col_ind[ind] && ind < row_ptr[r+1] ) { 
+         if (col_ind.size() > 0 &&
+             ind < row_ptr[r+1] &&
+             ind < col_ind.size() && // to appease valgrind memcheck
+             c == col_ind[ind] ) { 
             cout << ' ' << setw(_PRINT_FULL_WIDTH_) << setfill(' ')
                  << setprecision(_PRINT_FULL_PREC_)
                  << static_cast<double>(val[ind]);

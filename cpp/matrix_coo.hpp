@@ -64,10 +64,13 @@ class matrix_coo {
       // Operations //
       ////////////////
       // scalar
-      matrix_coo<T>& operator+=(const T& value);
-      matrix_coo<T>& operator-=(const T& value);
       matrix_coo<T>& operator*=(const T& value);
       matrix_coo<T>& operator/=(const T& value);
+
+      // matrix add/sub
+      matrix_coo<T>& operator+=(const matrix_coo<T>& B);
+      matrix_coo<T>& operator-=(const matrix_coo<T>& B);
+
 
       /////////////////////
       // Type conversion //
@@ -84,6 +87,30 @@ class matrix_coo {
       void print_full(void);
  
 };
+
+
+///////////////////////////
+// Non-member Operations //
+///////////////////////////
+// scalar
+template<typename T>
+matrix_coo<T> operator*(const matrix_coo<T>& lhs, const T& rhs);
+
+template<typename T>
+matrix_coo<T> operator*(const T& lhs, const matrix_coo<T>& rhs);
+
+template<typename T>
+matrix_coo<T> operator/(const matrix_coo<T>& lhs, const T& rhs);
+
+
+// matrix add/sub
+template<typename T>
+matrix_coo<T> operator+(const matrix_coo<T>& lhs, const matrix_coo<T>& rhs);
+
+template<typename T>
+matrix_coo<T> operator-(const matrix_coo<T>& lhs, const matrix_coo<T>& rhs);
+
+
 
 //////////////////////////
 // Special Constructors //
@@ -111,7 +138,7 @@ ostream& operator<<(ostream& os, const matrix_coo<T>& mat) {
       for (unsigned i=0; i < mat.col_ind.size(); ++i)
          cout << mat.col_ind[i] << "  ";
       os << endl;
-      os << "debug 1: val:     ";
+      os << "debug 1: val: ";
       for (unsigned i=0; i < mat.val.size(); ++i)
          cout << setprecision(_PRINT_SPARSE_PREC_) << mat.val[i] << "  ";
       os << endl;

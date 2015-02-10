@@ -106,7 +106,7 @@ void matrix_coo<T>::clean(void) {
       }
    }
 
-   if (num_dups > 0) {
+   if (_DEBUG_ >= 1 && num_dups > 0) {
       cerr << "warning: matrix_coo:clean: duplicate entries found or "
            << "zeros; combining entries by adding and removing zero entries"
            << endl;
@@ -140,22 +140,6 @@ matrix_coo<T> eye_coo(unsigned m, unsigned n) {
 ////////////////
 // scalar
 template<typename T>
-matrix_coo<T>& matrix_coo<T>::operator+=(const T& value) {
-   for (auto it=val.begin(); it != val.end(); ++it) {
-      *it += value;
-   }
-   return *this;
-}
-
-template<typename T>
-matrix_coo<T>& matrix_coo<T>::operator-=(const T& value) {
-   for (auto it=val.begin(); it != val.end(); ++it) {
-      *it -= value;
-   }
-   return *this;
-}
-
-template<typename T>
 matrix_coo<T>& matrix_coo<T>::operator*=(const T& value) {
    for (auto it=val.begin(); it != val.end(); ++it) {
       *it *= value;
@@ -164,12 +148,186 @@ matrix_coo<T>& matrix_coo<T>::operator*=(const T& value) {
 }
 
 template<typename T>
+inline matrix_coo<T> operator*(const matrix_coo<T>& lhs, const T& rhs) {
+   return matrix_coo<T>(lhs) *= rhs;
+}
+
+template<typename T>
+inline matrix_coo<T> operator*(const T& lhs, const matrix_coo<T>& rhs) {
+   return matrix_coo<T>(rhs) *= lhs;
+}
+
+
+template<typename T>
 matrix_coo<T>& matrix_coo<T>::operator/=(const T& value) {
    for (auto it=val.begin(); it != val.end(); ++it) {
       *it /= value;
    }
    return *this;
 }
+
+template<typename T>
+inline matrix_coo<T> operator/(const matrix_coo<T>& lhs, const T& rhs) {
+   return matrix_coo<T>(lhs) /= rhs;
+}
+
+// matrix add/sub
+// *this += B;
+template<typename T>
+matrix_coo<T>& matrix_coo<T>::operator+=(const matrix_coo<T>& B) {
+   //unsigned this_ind = 0, B_ind = 0;;
+
+   // check sizes
+   if ( m != B.m || n != B.n ) {
+      cerr << "error: matrix_coo:+=: matrix sizes do not match - ("
+           << m << "," << n << ") vs. ("
+           << B.m << "," << B.n << ")" << endl;
+      exit(-1);
+   }
+
+   // One (stupid!) option is to just append the values of B to *this and 
+   // then call this->clean() to sort and add.  Don't know how fast
+   // this will be though.  Shouldn't really matter, since CRS will be 
+   // the main type.
+ 
+   row_ind.insert(row_ind.begin(), B.row_ind.begin(), B.row_ind.end());
+   col_ind.insert(col_ind.begin(), B.col_ind.begin(), B.col_ind.end());
+   val.insert(val.begin(), B.val.begin(), B.val.end());
+   this->clean();
+
+   return *this;
+
+   // {{{
+   //// *this is empty
+   //if ( val.size() == 0 ) {
+   //   row_ind = B.row_ind;
+   //   col_ind = B.col_ind;
+   //   val = B.val;
+   //   
+   //   return *this;
+   //}
+  
+   //// loop through entries of B
+   //while ( B_ind < B.val.size() ) {
+
+   //   // need to append entries to *this once we're past the last one in *this
+   //   if ( this_ind == val.size() ) {
+   //      row_ind.push_back(B.row_ind[B_ind]);
+   //      col_ind.push_back(B.col_ind[B_ind]);
+   //      val.push_back(B.val[B_ind]);
+   //      
+   //      ++B_ind;
+   //      continue;
+   //   }
+
+   //   // entry in row before *this has anything
+   //   if ( B.row_ind[B_ind] < row_ind[this_ind] ) {
+   //      row_ind.insert(row_ind.begin() + this_ind, B.row_ind[B_ind]);
+   //      col_ind.insert(col_ind.begin() + this_ind, B.col_ind[B_ind]);
+   //      val.insert(val.begin() + this_ind, B.val[B_ind]);
+
+   //      ++B_ind;
+   //      continue;
+   //   }
+
+   //   // entry in B in same row as *this or next row
+   //   else {
+   //      if ( B.row_ind[B_ind] == row_ind[this_ind] ) {
+
+   //         // make this_ind point to the next entry in *this past the
+   //         // entry in B pointed to by B_ind
+   //         while ( this_ind < val.size() && 
+   //                 row_ind[this_ind] == B.row_ind[B_ind] && 
+   //                 col_ind[this_ind] < B.col_ind[B_ind] )
+   //            ++this_ind;
+
+   //         // this_ind points to the next row
+   //         // repeat the outer iteration
+   //         if ( this_ind == val.size() || 
+   //              row_ind[this_ind] > B.row_ind[B_ind] ) {
+   //            continue;
+   //         }
+
+   //         // combine entries
+   //         else if ( B.col_ind[B_ind] == col_ind[this_ind] ) {
+   //            val[this_ind] += B.val[B_ind];
+   //
+   //            // if val below _ELEMENT_ZERO_TOL_, remove it
+   //            if ( abs(val[this_ind]) < _ELEMENT_ZERO_TOL_ ) {
+   //               row_ind.erase(row_ind.begin()+ this_ind);
+   //               col_ind.erase(col_ind.begin()+ this_ind);
+   //               val.erase(val.begin()+ this_ind);
+   //            }
+
+   //            ++B_ind;
+   //            continue;
+   //         }
+
+   //         // insert entry of B into *this
+   //         else if ( B.col_ind[B_ind] < col_ind[this_ind] ) {
+   //            row_ind.insert(row_ind.begin() + this_ind, B.row_ind[B_ind]);
+   //            col_ind.insert(col_ind.begin() + this_ind, B.col_ind[B_ind]);
+   //            val.insert(val.begin() + this_ind, B.val[B_ind]);
+
+   //            ++B_ind;
+   //            continue;
+   //         }
+   //        
+   //         // if we reach here, we must be out of elements in *this
+   //         // that is, this_ind == val.size()
+   //         // continue loop to reach section that handles this
+   //         else { 
+   //            row_ind.push_back(B.row_ind[B_ind]);
+   //            col_ind.push_back(B.col_ind[B_ind]);
+   //            val.push_back(B.val[B_ind]);
+
+   //            ++B_ind;
+   //            continue;
+   //         }
+   //      }
+
+   //      // B points past the row this_ind points to; move this_ind and 
+   //      // repeat the loop or just append entry of B
+   //      else if ( B.row_ind[B_ind] > row_ind[this_ind] ) {
+
+   //         while ( this_ind < val.size() && 
+   //                 row_ind[this_ind] < B.row_ind[B_ind] )
+   //            ++this_ind;
+
+   //         // past last element of *this; append entry of B
+   //         if ( this_ind == val.size() ) {
+   //            row_ind.push_back(B.row_ind[B_ind]);
+   //            col_ind.push_back(B.col_ind[B_ind]);
+   //            val.push_back(B.val[B_ind]);
+
+   //            ++B_ind;
+   //            continue;
+   //         }
+
+   //         // now try to repeat the loop
+   //      }
+   //   }
+   //}
+   // 
+   //return *this;
+   // }}}
+}
+
+template<typename T>
+matrix_coo<T> operator+(const matrix_coo<T>& lhs, const matrix_coo<T>& rhs) {
+   return matrix_coo<T>(lhs) += rhs;
+}
+
+template<typename T>
+matrix_coo<T>& matrix_coo<T>::operator-=(const matrix_coo<T>& B) {
+   return (*this += -1.0*B);
+}
+
+template<typename T>
+matrix_coo<T> operator-(const matrix_coo<T>& lhs, const matrix_coo<T>& rhs) {
+   return matrix_coo<T>(lhs) -= rhs;
+}
+
 
 /////////////////////
 // Type conversion //
@@ -196,4 +354,13 @@ void matrix_coo<T>::print_full(void) {
 // double
 template class matrix_coo<double>;
 template matrix_coo<double> eye_coo<double>(unsigned, unsigned);
+
+template matrix_coo<double> operator*(const matrix_coo<double>&,const double&);
+template matrix_coo<double> operator*(const double&,const matrix_coo<double>&);
+template matrix_coo<double> operator/(const matrix_coo<double>&,const double&);
+
+template matrix_coo<double> operator+(const matrix_coo<double>&,
+                                      const matrix_coo<double>&);
+template matrix_coo<double> operator-(const matrix_coo<double>&,
+                                      const matrix_coo<double>&);
 

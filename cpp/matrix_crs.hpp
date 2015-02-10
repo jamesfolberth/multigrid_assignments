@@ -135,7 +135,7 @@ ostream& operator<<(ostream& os, const matrix_crs<T>& mat) {
       for (unsigned i=0; i<mat.col_ind.size(); ++i)
          os << mat.col_ind[i] << "  ";
       os << endl;
-      os << "debug 1: val:     ";
+      os << "debug 1: val: ";
       for (unsigned i=0; i<mat.val.size(); ++i)
          os << mat.val[i] << "  ";
       os << endl;
