@@ -28,5 +28,7 @@ Maybe see what Armadillo does.
 
 TODO
 ====
-* HDF5 -> Octave for plotting
-* PS2
+* use valarray instead of vector?  Prolly
+* HDF5 -> Octave for plotting?
+* Call gnuplot directly?
+* PA2

@@ -21,10 +21,10 @@ all: test run
 run: test
 	./test
 
-test: matrix_coo.o matrix_crs.o utils.o model_problems.o test.cpp
+test: matrix_coo.o matrix_crs.o utils.o model_problems.o classical_solvers.o test.cpp
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c test.cpp
 	$(CPP) $(CPPFLAGS) -flto $(LDLIBS) $(LDFLAGS) matrix_coo.o\
-		matrix_crs.o utils.o model_problems.o test.o -o test
+		matrix_crs.o utils.o model_problems.o classical_solvers.o test.o -o test
 
 matrix_coo.o: $(MATLIB_COMMON)
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c matrix_coo.cpp
@@ -37,6 +37,9 @@ utils.o: utils.cpp utils.hpp
 
 model_problems.o: $(MATLIB_COMMON) model_problems.cpp model_problems.hpp
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c model_problems.cpp
+
+classical_solvers.o: $(MATLIB_COMMON) classical_solvers.cpp classical_solvers.hpp
+	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c classical_solvers.cpp
 
 force:
 

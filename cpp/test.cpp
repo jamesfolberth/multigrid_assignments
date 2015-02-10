@@ -10,6 +10,7 @@
 #include "matrix_coo.hpp"
 #include "matrix_crs.hpp"
 #include "model_problems.hpp"
+#include "classical_solvers.hpp"
 
 using namespace std;
 
@@ -409,11 +410,31 @@ void test_crs_kron(void) {
    // }}}
 }
 
+void test_crs_matvec(void) {
+   // {{{
+   unsigned m = 5, n=6;
+   matrix_crs<double> A = rand_crs<double>(m,n);
+   vector<double> v(n,1.),u;
+
+   cout << "A = " << endl;
+   A.print_full();
+
+   cout << "v = " << endl;
+   print_vector(v);
+
+   cout << "u = " << endl;
+   u = A*v;
+   print_vector(u);
+   
+   // }}}
+}
+
+
 ////////////////////
 // Model problems //
 ////////////////////
 void test_model_problems(void) {
-
+   // {{{
    //matrix_crs<double> A1 = model_problem_1d<double>(3,1.);
    //cout << A1 << endl;
    //A1.print_full();
@@ -421,8 +442,38 @@ void test_model_problems(void) {
    matrix_crs<double> A2 = model_problem_2d<double>(2,3,1.);
    cout << A2 << endl;
    A2.print_full();
-
+   // }}}
 }
+
+
+///////////////////////
+// Classical Solvers //
+///////////////////////
+void test_wjacobi(void) {
+   // {{{
+   unsigned Lx = 3;
+   matrix_crs<double> A = model_problem_1d(Lx,0.);
+   vector<double> f(pow(2,Lx)-1,0.);
+   vector<double> v;
+
+   cout << "A = " << endl;
+   A.print_full();
+
+   cout << "f = " << endl;
+   print_vector(f);
+
+   v = wjacobi(A,f,2./3.,1);
+
+   cout << "v = " << endl;
+   print_vector(v);
+
+   cout << "\\|v\\|_inf = " << norm(v,0) << endl;
+   cout << "\\|v\\|_1 = " << norm(v,1) << endl;
+   cout << "\\|v\\|_2 = " << norm(v,2) << endl;
+
+   // }}}
+}
+
 
 int main() {
   
@@ -438,9 +489,14 @@ int main() {
    //test_crs_scalar();
    //test_crs_add();
    //test_crs_kron();
+   //test_crs_matvec();
    
    // Model problems
-   test_model_problems();
+   //test_model_problems();
+
+   // Classical solvers
+   test_wjacobi();
+
 
    return 0;
 }

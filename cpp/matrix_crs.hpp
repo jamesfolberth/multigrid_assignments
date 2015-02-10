@@ -109,6 +109,9 @@ template<typename T>
 matrix_crs<T> operator-(const matrix_crs<T>& lhs, const matrix_crs<T>& rhs);
 
 
+// matrix-vector product
+template<typename T>
+vector<T> operator*(const matrix_crs<T>& A, const vector<T>& x);
 
 
 

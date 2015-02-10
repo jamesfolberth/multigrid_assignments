@@ -367,6 +367,31 @@ matrix_crs<T> operator-(const matrix_crs<T>& lhs, const matrix_crs<T>& rhs) {
 }
 
 
+// matrix-vector product
+template<typename T>
+vector<T> operator*(const matrix_crs<T>& A, const vector<T>& x) {
+  
+   // check sizes
+   if ( A.n != x.size() ) {
+      cerr << "error: matrix_crs:*: matrix-vector product dimension mismatch."
+           << endl;
+      exit(-1);
+   }
+
+   // allocate and fill with zeros
+   // TODO: is b.reserve(A.m), b.push_back(0), b[row] += ... faster?
+   vector<T> b(A.m,0);
+
+   for (unsigned row=0; row < A.m; ++row) {
+      for (unsigned ptr=A.row_ptr[row]; ptr<A.row_ptr[row+1]; ++ptr) {
+         b[row] += A.val[ptr] * x[A.col_ind[ptr]];
+      }
+   }
+
+   return b;
+}
+
+
 
 
 /////////////////////
@@ -516,4 +541,7 @@ template matrix_crs<double> operator+(const matrix_crs<double>&,
                                       const matrix_crs<double>&);
 template matrix_crs<double> operator-(const matrix_crs<double>&,
                                       const matrix_crs<double>&);
+
+template vector<double> operator*(const matrix_crs<double>&,
+                                      const vector<double>&);
 
