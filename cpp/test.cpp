@@ -391,15 +391,36 @@ void test_crs_add(void) {
    // }}}
 }
 
+void test_crs_kron(void) {
+   // {{{
+   matrix_crs<double> A = rand_crs<double>(2,2);
+   matrix_crs<double> B = rand_crs<double>(2,3);
+   matrix_crs<double> C = kron<double>(A,B);
+
+   cout << "A = " << endl;
+   A.print_full();
+
+   cout << "B = " << endl;
+   B.print_full();
+
+   cout << "kron(A,B) = " << endl;
+   //cout << C << endl;
+   C.print_full();
+   // }}}
+}
 
 ////////////////////
 // Model problems //
 ////////////////////
 void test_model_problems(void) {
 
-   matrix_crs<double> A1 = model_problem_1d<double>(3,1.);
-   cout << A1 << endl;
-   A1.print_full();
+   //matrix_crs<double> A1 = model_problem_1d<double>(3,1.);
+   //cout << A1 << endl;
+   //A1.print_full();
+
+   matrix_crs<double> A2 = model_problem_2d<double>(2,3,1.);
+   cout << A2 << endl;
+   A2.print_full();
 
 }
 
@@ -415,10 +436,11 @@ int main() {
    //test_crs_matrix();
    //test_crs_eye();
    //test_crs_scalar();
-   test_crs_add();
+   //test_crs_add();
+   //test_crs_kron();
    
    // Model problems
-   //test_model_problems();
+   test_model_problems();
 
    return 0;
 }

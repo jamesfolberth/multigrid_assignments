@@ -28,6 +28,5 @@ Maybe see what Armadillo does.
 
 TODO
 ====
-* Sparse add (COO)
-* Sparse kron (COO, CRS->COO->CRS?, pure CRS)
-* ModelProblem2D
+* HDF5 -> Octave for plotting
+* PS2

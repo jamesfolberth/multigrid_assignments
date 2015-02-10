@@ -2,7 +2,7 @@
 CPP=g++
 SHELL=/usr/bin/bash
 
-CPPFLAGS=-Wall -Wpedantic -g -std=c++11 -O2 -march=native
+CPPFLAGS=-Wall -Wpedantic -g -std=c++11 -Og -march=native
 
 LDFLAGS=
 LDLIBS=-lc -lm

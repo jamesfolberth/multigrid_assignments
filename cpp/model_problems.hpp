@@ -16,6 +16,6 @@ template<typename T>
 matrix_crs<T> model_problem_1d(unsigned L, T sigma = 0.);
 
 template<typename T>
-matrix_crs<T> model_problem_1d(unsigned Lx, unsigned Ly, T sigma = 0.);
+matrix_crs<T> model_problem_2d(unsigned Lx, unsigned Ly, T sigma = 0.);
 
 #endif

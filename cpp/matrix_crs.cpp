@@ -15,7 +15,18 @@ matrix_crs<T>::matrix_crs(
       vector<unsigned>& init_row_ind,
       vector<unsigned>& init_col_ind,
       vector<T>& init_val,
-      size_t init_m, size_t init_n) {
+      size_t init_m, size_t init_n, unsigned flag) {
+
+   // if a (complete) CRS matrix is passed in, build it
+   if ( flag == 1 ) {
+      row_ptr = init_row_ind; // actually row pointers
+      col_ind = init_col_ind;
+      val = init_val;
+      m = init_m;
+      n = init_n;
+      return;
+   }
+   
 // Construct a CRS matrix from vectors of row index, column index, and values
 // We first build a COO matrix to sort and deal with duplicate entries, and
 // also determine the size of the matrix.
@@ -124,21 +135,6 @@ inline void matrix_crs<T>::deepclean(void) {
 }
 
 
-// TODO maybe move to seperate file?
-// special forms
-template<typename T>
-matrix_crs<T> eye_crs(unsigned m, unsigned n) {
-   vector<unsigned> rind(MIN(m,n)), cind(MIN(m,n));
-   vector<T> val(MIN(m,n), static_cast<T>(1)); // fill val with 1s on construct
-
-   for (unsigned i=0; i < rind.size(); ++i) {
-      rind[i] = i;
-      cind[i] = i;
-   }
-
-   return matrix_crs<T>(rind, cind, val, m, n);
-}
-
 
 ////////////////
 // Operations //
@@ -206,6 +202,7 @@ matrix_crs<T>& matrix_crs<T>::operator+=(const matrix_crs<T>& B) {
    // similar to Julia's version
    // This doesn't work in place; it returns a new matrix
    // It's still a lot faster than the one I wrote!
+   // TODO: this does some dumb copy stuff.  Better to define operator+ instead
    for (unsigned row=0; row < m; ++row) {
       ptrA = row_ptr[row];
       stopA = row_ptr[row+1];
@@ -273,6 +270,7 @@ matrix_crs<T>& matrix_crs<T>::operator+=(const matrix_crs<T>& B) {
    return *this;
 
    //// James' version
+   //{{{
    //// loop through rows
    //for (unsigned row=0; row < m; ++row) {
    //   this_col_ind = row_ptr[row];
@@ -348,8 +346,9 @@ matrix_crs<T>& matrix_crs<T>::operator+=(const matrix_crs<T>& B) {
    //      }
    //   }
    //}
-
-   return *this;
+   //
+   //return *this;
+   //}}}
 }
 
 template<typename T>
@@ -389,6 +388,74 @@ matrix_coo<T> matrix_crs<T>::to_coo(void) {
 template<typename T>
 inline matrix_crs<T> matrix_crs<T>::to_crs(void) {
    return *this;
+}
+
+//////////////////////////
+// Special Constructors //
+//////////////////////////
+template<typename T>
+matrix_crs<T> eye_crs(unsigned m, unsigned n) {
+   vector<unsigned> rind(MIN(m,n)), cind(MIN(m,n));
+   vector<T> val(MIN(m,n), static_cast<T>(1)); // fill val with 1s on construct
+
+   for (unsigned i=0; i < rind.size(); ++i) {
+      rind[i] = i;
+      cind[i] = i;
+   }
+
+   return matrix_crs<T>(rind, cind, val, m, n);
+}
+
+template<typename T>
+matrix_crs<T> kron(const matrix_crs<T>& A, const matrix_crs<T>& B) {
+   unsigned mA,nA,mB,nB,mK,nK,nnzK;
+   unsigned startA, stopA, ptrA, lA;
+   unsigned startB, stopB, ptrB, lB;
+   unsigned ptrK, row, ptrK_ran;
+
+   mA = A.m; nA = A.n; mB = B.m; nB = B.n;
+   mK = mA*mB; nK = nA*nB;
+   nnzK = A.val.size()*B.val.size();
+
+   vector<unsigned> row_ptrK(mK+1);
+   vector<unsigned> col_indK(nnzK);
+   vector<T> valK(nnzK);// this is the exact size
+
+   // this is similar to Julia's
+   row = 0;
+   row_ptrK[0] = 0;
+
+   for (unsigned j=0; j<mA; ++j) {
+      startA = A.row_ptr[j];
+      stopA = A.row_ptr[j+1];
+      lA = stopA-startA;
+
+      for (unsigned i=0; i<mB; ++i) {
+         startB = B.row_ptr[i];
+         stopB = B.row_ptr[i+1];
+         lB = stopB-startB;
+
+         ptrK_ran = row_ptrK[row];
+
+         for (ptrA = startA; ptrA < stopA; ++ptrA) {
+            ptrB = startB;
+
+            for (ptrK = ptrK_ran; ptrK < ptrK_ran+lB; ++ptrK) {
+               cout << "ptrK = " << ptrK << endl;
+               col_indK[ptrK] = A.col_ind[ptrA]*nB + B.col_ind[ptrB];
+               valK[ptrK] = A.val[ptrA] * B.val[ptrB];
+               ptrB += 1;
+            }
+            
+            ptrK_ran += lB;
+         }
+
+         row_ptrK[row+1] = row_ptrK[row] + lA*lB;
+         row += 1;
+      }
+   }
+
+   return matrix_crs<T>(row_ptrK, col_indK, valK, mK, nK, 1);
 }
 
 
@@ -438,6 +505,8 @@ void matrix_crs<T>::print_full(void) {
 /////////
 template class matrix_crs<double>;
 template matrix_crs<double> eye_crs<double>(unsigned,unsigned);
+template matrix_crs<double> kron<double>(const matrix_crs<double>&,
+                                         const matrix_crs<double>&);
 
 template matrix_crs<double> operator*(const matrix_crs<double>&,const double&);
 template matrix_crs<double> operator*(const double&,const matrix_crs<double>&);

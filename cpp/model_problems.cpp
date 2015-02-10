@@ -52,17 +52,23 @@ matrix_crs<T> model_problem_1d(unsigned L, T sigma) {
 }
 
 
-//template<typename T>
-//matrix_crs<T> model_problem_2d(unsigned Lx, unsigned Ly, T sigma) {
-//   // Form 2D system using 1D x and y system and Kronecker product
-//
-//   matrix_coo<T>
-//
-//
-//   return matrix_crs<T>(krind, kcrind, kval, km, kn);
-//}
+template<typename T>
+matrix_crs<T> model_problem_2d(unsigned Lx, unsigned Ly, T sigma) {
+   // Form 2D system using 1D x and y system and Kronecker product
+
+   unsigned m = pow(2,Lx)-1, n = pow(2,Ly)-1;
+   matrix_crs<T> Ax = model_problem_1d<T>(Lx,static_cast<T>(0.0));
+   matrix_crs<T> Ix = eye_crs<T>(m,m);
+   matrix_crs<T> Ay = model_problem_1d<T>(Ly,static_cast<T>(0.0));
+   matrix_crs<T> Iy = eye_crs<T>(n,n);
+
+   // row-wise ordering
+   return kron(Ax,Iy)+kron(Ix,Ay)+sigma*eye_crs<T>(m*n,m*n);
+   // column-wise ordering
+   //return kron(Iy,Ax)+kron(Ay,Ix)+sigma*eye_crs<T>(m*n,m*n);
+}
 
 
 // Force instantiation for specific types
 template matrix_crs<double> model_problem_1d<double>(unsigned,double);
-//template matrix_crs<double> model_problem_2d<double>(unsigned,double);
+template matrix_crs<double> model_problem_2d<double>(unsigned,unsigned,double);

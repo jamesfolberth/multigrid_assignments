@@ -46,7 +46,7 @@ class matrix_crs {
       matrix_crs<T>(vector<unsigned>& init_row_ind,
                  vector<unsigned>& init_col_ind,
                  vector<T>& init_val,
-                 size_t init_m=0, size_t init_n=0);
+                 size_t init_m=0, size_t init_n=0, unsigned flag=0);
 
       // copy, move, destruct
       matrix_crs<T>(const matrix_crs<T>& ) = default;
@@ -118,7 +118,14 @@ matrix_crs<T> operator-(const matrix_crs<T>& lhs, const matrix_crs<T>& rhs);
 template<typename T>
 matrix_crs<T> eye_crs(unsigned m, unsigned n);
 
+template<typename T>
+matrix_crs<T> kron(const matrix_crs<T>& A, const matrix_crs<T>& B);
 
+
+
+////////////
+// Output //
+////////////
 template <typename T>
 ostream& operator<<(ostream& os, const matrix_crs<T>& mat) {
 
