@@ -22,5 +22,22 @@ void wjacobi_it(const matrix_crs<T>& A, const valarray<T>& f,
                        const valarray<T>& v0, valarray<T>& v1,
                        const T w);
 
+template<typename T>
+valarray<T> gauss_seidel(const matrix_crs<T>& A, const valarray<T>& f, 
+                         int num_itr = -1);
+
+template<typename T>
+void gauss_seidel_it(const matrix_crs<T>& A, const valarray<T>& f,
+                     valarray<T>& v);
+
+template<typename T>
+valarray<T> rbgauss_seidel(const matrix_crs<T>& A, const valarray<T>& f, 
+                         int num_itr = -1);
+
+template<typename T>
+void rbgauss_seidel_it(const matrix_crs<T>& A, const valarray<T>& f,
+                     valarray<T>& v);
+
+
 
 #endif

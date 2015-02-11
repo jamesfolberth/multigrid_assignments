@@ -471,6 +471,44 @@ void test_wjacobi(void) {
    // }}}
 }
 
+void test_gauss_seidel(void) {
+   // {{{
+   unsigned Lx = 6;
+   matrix_crs<double> A = model_problem_1d(Lx,0.);
+   valarray<double> f(0.,pow(2,Lx)-1);
+   valarray<double> v;
+
+   // use the driver to set things up
+   v = gauss_seidel<double>(A,f,0);
+
+   for (unsigned i=0; i < 100; ++i) {
+      gauss_seidel_it<double>(A,f,v);
+
+      cout << "\\|error\\|_inf = " << norm(v,0) << endl;
+   }
+   
+   // }}}
+}
+
+void test_rbgauss_seidel(void) {
+   // {{{
+   unsigned Lx = 6;
+   matrix_crs<double> A = model_problem_1d(Lx,0.);
+   valarray<double> f(0.,pow(2,Lx)-1);
+   valarray<double> v;
+
+   // use the driver to set things up
+   v = rbgauss_seidel<double>(A,f,0);
+
+   for (unsigned i=0; i < 100; ++i) {
+      rbgauss_seidel_it<double>(A,f,v);
+
+      cout << "\\|error\\|_inf = " << norm(v,0) << endl;
+   }
+   
+   // }}}
+}
+
 
 int main() {
   
@@ -492,7 +530,9 @@ int main() {
    //test_model_problems();
 
    // Classical solvers
-   test_wjacobi();
+   //test_wjacobi();
+   //test_gauss_seidel();
+   test_rbgauss_seidel();
 
 
    return 0;
