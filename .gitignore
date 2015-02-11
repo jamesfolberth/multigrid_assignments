@@ -1,3 +1,6 @@
-*.txt
+*.txt*
 *.o
+*.tikz*
+
 cpp/test
+cpp/prog02

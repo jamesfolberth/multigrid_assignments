@@ -369,7 +369,7 @@ matrix_crs<T> operator-(const matrix_crs<T>& lhs, const matrix_crs<T>& rhs) {
 
 // matrix-vector product
 template<typename T>
-vector<T> operator*(const matrix_crs<T>& A, const vector<T>& x) {
+valarray<T> operator*(const matrix_crs<T>& A, const valarray<T>& x) {
   
    // check sizes
    if ( A.n != x.size() ) {
@@ -379,11 +379,10 @@ vector<T> operator*(const matrix_crs<T>& A, const vector<T>& x) {
    }
 
    // allocate and fill with zeros
-   // TODO: is b.reserve(A.m), b.push_back(0), b[row] += ... faster?
-   vector<T> b(A.m,0);
+   valarray<T> b(static_cast<T>(0.),A.m);
 
-   for (unsigned row=0; row < A.m; ++row) {
-      for (unsigned ptr=A.row_ptr[row]; ptr<A.row_ptr[row+1]; ++ptr) {
+   for (size_t row=0; row < A.m; ++row) {
+      for (size_t ptr=A.row_ptr[row]; ptr<A.row_ptr[row+1]; ++ptr) {
          b[row] += A.val[ptr] * x[A.col_ind[ptr]];
       }
    }
@@ -542,6 +541,6 @@ template matrix_crs<double> operator+(const matrix_crs<double>&,
 template matrix_crs<double> operator-(const matrix_crs<double>&,
                                       const matrix_crs<double>&);
 
-template vector<double> operator*(const matrix_crs<double>&,
-                                      const vector<double>&);
+template valarray<double> operator*(const matrix_crs<double>&,
+                                      const valarray<double>&);
 

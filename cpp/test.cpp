@@ -4,6 +4,7 @@
 // Spring 2015
 
 #include <iostream>
+#include <valarray>
 #include <vector>
 #include <random> // randomly generated tests
 
@@ -414,7 +415,7 @@ void test_crs_matvec(void) {
    // {{{
    unsigned m = 5, n=6;
    matrix_crs<double> A = rand_crs<double>(m,n);
-   vector<double> v(n,1.),u;
+   valarray<double> v(1.,n),u;
 
    cout << "A = " << endl;
    A.print_full();
@@ -451,26 +452,22 @@ void test_model_problems(void) {
 ///////////////////////
 void test_wjacobi(void) {
    // {{{
-   unsigned Lx = 3;
+   unsigned Lx = 6;
    matrix_crs<double> A = model_problem_1d(Lx,0.);
-   vector<double> f(pow(2,Lx)-1,0.);
-   vector<double> v;
+   valarray<double> f(0.,pow(2,Lx)-1);
+   valarray<double> v0,v1;
 
-   cout << "A = " << endl;
-   A.print_full();
+   // use the driver to set things up
+   v0 = wjacobi<double>(A,f,2./3.,0);
+   v1 = v0;
 
-   cout << "f = " << endl;
-   print_vector(f);
+   for (unsigned i=0; i < 100; ++i) {
+      v0 = v1;
+      wjacobi_it<double>(A,f,v0,v1,2./3.);
 
-   v = wjacobi(A,f,2./3.,1);
-
-   cout << "v = " << endl;
-   print_vector(v);
-
-   cout << "\\|v\\|_inf = " << norm(v,0) << endl;
-   cout << "\\|v\\|_1 = " << norm(v,1) << endl;
-   cout << "\\|v\\|_2 = " << norm(v,2) << endl;
-
+      cout << "\\|error\\|_inf = " << norm(v1,0) << endl;
+   }
+   
    // }}}
 }
 

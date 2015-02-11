@@ -28,7 +28,7 @@ Maybe see what Armadillo does.
 
 TODO
 ====
-* use valarray instead of vector?  Prolly
+* use std::valarray instead of std::vector for dense vectors
 * HDF5 -> Octave for plotting?
 * Call gnuplot directly?
 * PA2

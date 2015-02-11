@@ -10,6 +10,7 @@
 #include <cassert>
 #include <iostream>
 #include <iomanip>
+#include <valarray>
 #include <vector>
 
 #include "utils.hpp"
@@ -111,7 +112,7 @@ matrix_crs<T> operator-(const matrix_crs<T>& lhs, const matrix_crs<T>& rhs);
 
 // matrix-vector product
 template<typename T>
-vector<T> operator*(const matrix_crs<T>& A, const vector<T>& x);
+valarray<T> operator*(const matrix_crs<T>& A, const valarray<T>& x);
 
 
 

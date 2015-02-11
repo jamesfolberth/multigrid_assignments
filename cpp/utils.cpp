@@ -13,27 +13,26 @@ using namespace std;
 
 // print a vector as a column vector
 template<typename T>
-void print_vector(vector<T>& v) {
-   for (auto it = v.begin(); it != v.end(); ++it) {
-      cout << "    " << setw(_PRINT_VECTOR_WIDTH_) << setfill(' ') 
+void print_vector(valarray<T>& v) {
+   for (size_t i = 0; i < v.size(); ++i) {
+      cout << setw(_PRINT_VECTOR_WIDTH_) << setfill(' ') 
            << setprecision(_PRINT_VECTOR_PREC_)
-           << static_cast<double>(*it) << endl;
+           << static_cast<double>(v[i]) << endl;
    }
    cout << endl;
 }
 
 // return a vector with uniform[0,1] random entries
 template<typename T>
-vector<T> rand_vec(const unsigned m, const T low, const T high) {
+valarray<T> rand_vec(const unsigned m, const T low, const T high) {
    random_device rd;
    std::mt19937 e2(rd());
    uniform_real_distribution<T> val_dist(low,high);
 
-   vector<T> v;
-   v.reserve(m);
+   valarray<T> v(m);
 
-   for (unsigned i=0; i<m; ++i) {
-      v.push_back(val_dist(e2));
+   for (size_t i=0; i<m; ++i) {
+      v[i] = val_dist(e2);
    }
    
    return v;
@@ -43,8 +42,8 @@ vector<T> rand_vec(const unsigned m, const T low, const T high) {
 // use p=0 as infinity norm
 // p=2 is like BLAS dnrm2
 template<typename T>
-T norm(const vector<T>& v, const unsigned p) {
-   T res = 0, scale = 0., absit, ssq = 1., tmp;
+T norm(const valarray<T>& v, const unsigned p) {
+   T res = 0, scale = 0., absvi, ssq = 1., tmp;
 
    if ( v.size() < 1 ) {
       return static_cast<T>(0.);
@@ -57,29 +56,29 @@ T norm(const vector<T>& v, const unsigned p) {
    else {
       switch (p) {
          case 0:
-            for (auto it = v.begin(); it != v.end(); ++it) {
-               if ( res < abs(*it) )
-                  res = abs(*it);
+            for (size_t i = 0; i < v.size(); ++i) {
+               if ( res < abs(v[i]) )
+                  res = abs(v[i]);
             }
             return res;
 
          case 1:
-            for (auto it = v.begin(); it != v.end(); ++it) {
-               res += abs(*it);
+            for (size_t i = 0; i < v.size(); ++i) {
+               res += abs(v[i]);
             }
             return res;
 
          case 2:
-            for (auto it = v.begin(); it != v.end(); ++it) {
-               if ( *it != 0. ) {
-                  absit = abs(*it);
-                  if ( scale < absit ) {
-                     tmp = scale/absit;
+            for (size_t i = 0; i < v.size(); ++i) {
+               if ( v[i] != 0. ) {
+                  absvi = abs(v[i]);
+                  if ( scale < absvi ) {
+                     tmp = scale/absvi;
                      ssq = 1. + ssq*tmp*tmp;
-                     scale = absit;
+                     scale = absvi;
                   }
                   else {
-                     tmp = absit/scale;
+                     tmp = absvi/scale;
                      ssq += tmp*tmp;
                   }
                }
@@ -95,34 +94,52 @@ T norm(const vector<T>& v, const unsigned p) {
    }
 }
 
-// operations on vectors
-template<typename T>
-vector<T> operator*(const vector<T>& a, const T val) {
-   vector<T> res;
-   res.reserve(a.size());
-   for (auto it = a.begin(); it != a.end(); ++it) {
-      res.push_back((*it)*val);
-   }
-   return res;
-}
+//// operations on vectors
+//template<typename T>
+//vector<T> operator*(const vector<T>& a, const T val) {
+//   vector<T> res;
+//   res.reserve(a.size());
+//   for (auto it = a.begin(); it != a.end(); ++it) {
+//      res.push_back((*it)*val);
+//   }
+//   return res;
+//}
+//
+//
+//template<typename T>
+//vector<T> operator+(const vector<T>& a, const vector<T>& b) {
+//   vector<T> res;
+//
+//   if ( a.size() != b.size() ) {
+//      cerr << "error: utils:vector:+: dimension mismatch" << endl;
+//      exit(-1);
+//   }
+//
+//   res.reserve(a.size());
+//   for (unsigned i=0; i < a.size(); ++i) {
+//      res.push_back(a[i]+b[i]);
+//   }
+//
+//   return res;
+//}
+//
+//template<typename T>
+//vector<T> operator-(const vector<T>& a, const vector<T>& b) {
+//   vector<T> res;
+//
+//   if ( a.size() != b.size() ) {
+//      cerr << "error: utils:vector:+: dimension mismatch" << endl;
+//      exit(-1);
+//   }
+//
+//   res.reserve(a.size());
+//   for (unsigned i=0; i < a.size(); ++i) {
+//      res.push_back(a[i]-b[i]);
+//   }
+//
+//   return res;
+//}
 
-
-template<typename T>
-vector<T> operator+(const vector<T>& a, const vector<T>& b) {
-   vector<T> res;
-
-   if ( a.size() != b.size() ) {
-      cerr << "error: utils:vector:+: dimension mismatch" << endl;
-      exit(-1);
-   }
-
-   res.reserve(a.size());
-   for (unsigned i=0; i < a.size(); ++i) {
-      res.push_back(a[i]+b[i]);
-   }
-
-   return res;
-}
 
 
 //////////
@@ -141,17 +158,17 @@ int pow(int b, int e) {
 }
 
 // Force instantiation
-template void print_vector<double>(vector<double>& v);
-template vector<double> rand_vec<double>(const unsigned,
+template void print_vector<double>(valarray<double>& v);
+template valarray<double> rand_vec<double>(const unsigned,
                                          const double, const double);
-template double norm<double>(const vector<double>&, const unsigned);
+template double norm<double>(const valarray<double>&, const unsigned);
 
-template vector<double> operator*(const vector<double>&, const double);
-
-template vector<double> operator+(const vector<double>&,
-                                  const vector<double>&);
+//template vector<double> operator*(const vector<double>&, const double);
+//
+//template vector<double> operator+(const vector<double>&,
+//                                  const vector<double>&);
 //template vector<double> operator-(const vector<double>&,
 //                                  const vector<double>&);
-
+//
 
 

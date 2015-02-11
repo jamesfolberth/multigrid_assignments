@@ -14,17 +14,24 @@ MATLIB_COMMON= matrix_coo.cpp\
 					utils.hpp\
 					utils.cpp\
 
-.PHONY: all clean run
+.PHONY: all clean run prog02_fig
 
 all: test run
 
 run: test
 	./test
 
+# Code
 test: matrix_coo.o matrix_crs.o utils.o model_problems.o classical_solvers.o test.cpp
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c test.cpp
 	$(CPP) $(CPPFLAGS) -flto $(LDLIBS) $(LDFLAGS) matrix_coo.o\
 		matrix_crs.o utils.o model_problems.o classical_solvers.o test.o -o test
+
+prog02: matrix_coo.o matrix_crs.o utils.o model_problems.o classical_solvers.o prog02.cpp
+	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c prog02.cpp
+	$(CPP) $(CPPFLAGS) -flto $(LDLIBS) $(LDFLAGS) matrix_coo.o\
+		matrix_crs.o utils.o model_problems.o classical_solvers.o \
+		prog02.o -o prog02
 
 matrix_coo.o: $(MATLIB_COMMON)
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c matrix_coo.cpp
@@ -41,8 +48,22 @@ model_problems.o: $(MATLIB_COMMON) model_problems.cpp model_problems.hpp
 classical_solvers.o: $(MATLIB_COMMON) classical_solvers.cpp classical_solvers.hpp
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c classical_solvers.cpp
 
+
+# figures
+prog02_fig: prog02
+	make -C figures/ prog02
+
+
+
 force:
 
 clean:
-	rm -f *.o
-	rm -f test
+	@rm -f *.o
+	@rm -f test prog02
+
+cleandata:
+	make -C figures/ cleandata
+
+deepclean: clean cleandata
+	make -C figures/ deepclean
+
