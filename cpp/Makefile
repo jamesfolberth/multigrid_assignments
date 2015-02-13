@@ -1,8 +1,11 @@
+# GNU Makefile
 
-CPP=g++
+# use normal g++ if you don't have GCC version >= 4.9
+#CPP=g++ 
+CPP=g++ -fdiagnostics-color=auto
 SHELL=/usr/bin/bash
 
-CPPFLAGS=-Wall -Wpedantic -g -std=c++11 -Og -march=native
+CPPFLAGS=-Wall -Wpedantic -std=c++11 -g -Og -march=native
 
 LDFLAGS=
 LDLIBS=-lc -lm
@@ -51,8 +54,8 @@ classical_solvers.o: $(MATLIB_COMMON) classical_solvers.cpp classical_solvers.hp
 
 # figures
 prog02_fig: prog02
+	./prog02
 	make -C figures/ prog02
-
 
 
 force:
@@ -60,6 +63,7 @@ force:
 clean:
 	@rm -f *.o
 	@rm -f test prog02
+	@rm -f *.out # gprof
 
 cleandata:
 	make -C figures/ cleandata

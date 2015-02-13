@@ -56,17 +56,26 @@ T norm(const valarray<T>& v, const unsigned p) {
    else {
       switch (p) {
          case 0:
-            for (size_t i = 0; i < v.size(); ++i) {
-               if ( res < abs(v[i]) )
-                  res = abs(v[i]);
+            //for (size_t i = 0; i < v.size(); ++i) {
+            //   if ( res < abs(v[i]) )
+            //      res = abs(v[i]);
+            //}
+            //return res;
+            for (auto it = begin(v); it != end(v); ++it) {
+               if ( res < abs(*it) )
+                  res = abs(*it);
             }
             return res;
+            //return MAX(abs(v.min()), abs(v.max()));
 
          case 1:
             for (size_t i = 0; i < v.size(); ++i) {
                res += abs(v[i]);
             }
             return res;
+            //for ( auto it = begin(v); it != end(v); ++it)
+            //   res += abs(*it);
+            //return res;
 
          case 2:
             for (size_t i = 0; i < v.size(); ++i) {

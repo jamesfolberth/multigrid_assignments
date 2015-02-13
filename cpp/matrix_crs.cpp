@@ -465,7 +465,6 @@ matrix_crs<T> kron(const matrix_crs<T>& A, const matrix_crs<T>& B) {
             ptrB = startB;
 
             for (ptrK = ptrK_ran; ptrK < ptrK_ran+lB; ++ptrK) {
-               cout << "ptrK = " << ptrK << endl;
                col_indK[ptrK] = A.col_ind[ptrA]*nB + B.col_ind[ptrB];
                valK[ptrK] = A.val[ptrA] * B.val[ptrB];
                ptrB += 1;

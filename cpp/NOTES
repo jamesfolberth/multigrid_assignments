@@ -14,9 +14,7 @@ This will put a breakpoint at the exit statement of test and run the code a bunc
 
 
 
-http://stackoverflow.com/questions/2902064/how-to-track-down-a-double-free-or-corruption-error-in-c-with-gdb
-
-Use valgrind!
+valgrind
 
 
 Overloading
@@ -28,7 +26,4 @@ Maybe see what Armadillo does.
 
 TODO
 ====
-* use std::valarray instead of std::vector for dense vectors
-* HDF5 -> Octave for plotting?
-* Call gnuplot directly?
-* PA2
+

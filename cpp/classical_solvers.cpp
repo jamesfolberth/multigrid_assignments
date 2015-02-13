@@ -12,19 +12,19 @@ using namespace std;
 /////////////////////
 // {{{
 template<typename T>
-valarray<T> wjacobi(const matrix_crs<T>& A, const valarray<T>& f, const T w,
-      int num_itr) {
-   // weighted Jacobi method driver
+valarray<T> wjacobi(const matrix_crs<T>& A, const valarray<T>& f,
+      const valarray<T>& v0, const T w, const T resid_tol, int& num_itr) {
+   // weighted Jacobi method
    // pass in the matrix, RHS vector
+   // pass in an initial guess (there is another interface which creates a
+   //    random initial guess)
    // weight is optional.  defaults to 2./3.
+   // resid_tol is the norm(.,0) residual tolerance
    // num_itr is the number of iterations to do.  defaults to -1, which will
    //   run until we reach the maximum number of iterations or reach tolerance
    //   On return, num_itr will have the number of iterations completed.
 
-   unsigned max_itr = 100;
-   T resid_tol = static_cast<T>(10e-8);
-   
-   unsigned num_its_done, num_its_todo;
+   unsigned num_its_done;
    
    // check sizes
    if ( A.m != f.size() ) {
@@ -32,18 +32,19 @@ valarray<T> wjacobi(const matrix_crs<T>& A, const valarray<T>& f, const T w,
       exit(-1);
    }
 
-   // random initial guess
-   valarray<T> v = rand_vec<T>(A.n,-1.,1.);
-   valarray<T> v_prev = v;
+   // initial guess
+   valarray<T> v = v0;
+   valarray<T> v_prev = v0;
    valarray<T> resid = f-A*v;
 
    // number of iterations to do
-   if ( num_itr == -1 ) { // just do normal solve until we reach tol or max_itr
-   
-      // do weighted Jacobi iterations
+   if ( num_itr == -1 ) { // just do normal solve until we reach tol or 
+                          // _WJ_MAX_ITR_
+  
+      // do iterations
       // norm(...,0) is infinity norm
       num_its_done = 0;
-      while ( norm(resid,0) > resid_tol && num_its_done < max_itr ) {
+      while ( norm(resid,0) > resid_tol && num_its_done < _WJ_MAX_ITR_ ) {
          v_prev = v;
          
          wjacobi_it(A,f,v_prev,v,w);
@@ -54,9 +55,9 @@ valarray<T> wjacobi(const matrix_crs<T>& A, const valarray<T>& f, const T w,
    }
 
    else if ( num_itr >= 0 ) { // do exactly num_itr iterations
-      // do weighted Jacobi iterations
+      // do iterations
       // norm(...,0) is infinity norm
-      num_its_todo = static_cast<unsigned>(num_itr);
+      unsigned num_its_todo = static_cast<unsigned>(num_itr);
       num_its_done = 0;
       while ( num_its_done < num_its_todo ) {
          v_prev = v;
@@ -73,9 +74,42 @@ valarray<T> wjacobi(const matrix_crs<T>& A, const valarray<T>& f, const T w,
       exit(-1);
    }
 
-   num_itr = num_its_done;
+   num_itr = static_cast<int>(num_its_done);
    return v;
 }
+
+
+// specify resid (or default)
+
+template<typename T>
+valarray<T> wjacobi(const matrix_crs<T>& A, const valarray<T>& f, 
+      const T w, const T resid_tol, int& num_itr) {
+   valarray<T> v0 = rand_vec<T>(A.n,-1.,1.);
+   return wjacobi(A,f,v0,w,resid_tol,num_itr);
+}
+
+template<typename T>
+valarray<T> wjacobi(const matrix_crs<T>& A, const valarray<T>& f, 
+      const T w, const T resid_tol) {
+   int num_itr = -1;
+   valarray<T> v0 = rand_vec<T>(A.n,-1.,1.);
+   return wjacobi(A,f,v0,w,resid_tol,num_itr);
+}
+
+// specify num_itr (or default)
+template<typename T>
+valarray<T> wjacobi(const matrix_crs<T>& A, const valarray<T>& f, 
+      const valarray<T>& v0, const T w, int& num_itr) {
+   return wjacobi(A,f,v0,w,_WJ_DEFAULT_RESID_TOL_,num_itr);
+}
+
+template<typename T>
+valarray<T> wjacobi(const matrix_crs<T>& A, const valarray<T>& f, 
+      const T w, int& num_itr) {
+   valarray<T> v0 = rand_vec<T>(A.n,-1.,1.);
+   return wjacobi(A,f,v0,w,_WJ_DEFAULT_RESID_TOL_,num_itr);
+}
+
 
 template<typename T>
 void wjacobi_it(const matrix_crs<T>& A, const valarray<T>& f,
@@ -110,18 +144,19 @@ void wjacobi_it(const matrix_crs<T>& A, const valarray<T>& f,
 // {{{
 template<typename T>
 valarray<T> gauss_seidel(const matrix_crs<T>& A, const valarray<T>& f,
-                         int num_itr) {
+      const valarray<T>& v0, const T resid_tol, int& num_itr) {
    // Gauss Seidel method driver
    // pass in the matrix, RHS vector
-   // weight is optional.  defaults to 2./3.
+   // pass in an initial guess (there is another interface which creates a
+   //    random initial guess)
    // num_itr is the number of iterations to do.  defaults to -1, which will
    //   run until we reach the maximum number of iterations or reach tolerance
    //   On return, num_itr will have the number of iterations completed.
 
-   unsigned max_itr = 100;
-   T resid_tol = static_cast<T>(10e-8);
+   //T resid_tol = static_cast<T>(10e-8);
+   //cout << "gs main resid_tol = " << resid_tol << endl;
    
-   unsigned num_its_done, num_its_todo;
+   unsigned num_its_done;
    
    // check sizes
    if ( A.m != f.size() ) {
@@ -131,16 +166,17 @@ valarray<T> gauss_seidel(const matrix_crs<T>& A, const valarray<T>& f,
    }
 
    // random initial guess
-   valarray<T> v = rand_vec<T>(A.n,-1.,1.);
+   valarray<T> v = v0;
    valarray<T> resid = f-A*v;
 
    // number of iterations to do
-   if ( num_itr == -1 ) { // just do normal solve until we reach tol or max_itr
+   if ( num_itr == -1 ) { // just do normal solve until we reach tol or 
+                          // _GS_MAX_ITR_
    
       // do iterations
       // norm(...,0) is infinity norm
       num_its_done = 0;
-      while ( norm(resid,0) > resid_tol && num_its_done < max_itr ) {
+      while ( norm(resid,0) > resid_tol && num_its_done < _GS_MAX_ITR_ ) {
          
          gauss_seidel_it(A,f,v);
    
@@ -152,7 +188,7 @@ valarray<T> gauss_seidel(const matrix_crs<T>& A, const valarray<T>& f,
    else if ( num_itr >= 0 ) { // do exactly num_itr iterations
       // do iterations
       // norm(...,0) is infinity norm
-      num_its_todo = static_cast<unsigned>(num_itr);
+      unsigned num_its_todo = static_cast<unsigned>(num_itr);
       num_its_done = 0;
       while ( num_its_done < num_its_todo ) {
          
@@ -168,8 +204,38 @@ valarray<T> gauss_seidel(const matrix_crs<T>& A, const valarray<T>& f,
       exit(-1);
    }
 
-   num_itr = num_its_done;
+   num_itr = static_cast<int>(num_its_done);
    return v;
+}
+
+// specify resid (or default)
+template<typename T>
+valarray<T> gauss_seidel(const matrix_crs<T>& A, const valarray<T>& f, 
+      const T resid_tol, int& num_itr) {
+   valarray<T> v0 = rand_vec<T>(A.n,-1.,1.);
+   return gauss_seidel(A,f,v0,resid_tol,num_itr);
+}
+
+template<typename T>
+valarray<T> gauss_seidel(const matrix_crs<T>& A, const valarray<T>& f, 
+      const T resid_tol) {
+   int num_itr = -1;
+   valarray<T> v0 = rand_vec<T>(A.n,-1.,1.);
+   return gauss_seidel(A,f,v0,resid_tol,num_itr);
+}
+
+// specify num_itr (or default)
+template<typename T>
+valarray<T> gauss_seidel(const matrix_crs<T>& A, const valarray<T>& f, 
+      const valarray<T>& v0, int& num_itr) {
+   return gauss_seidel(A,f,v0,_GS_DEFAULT_RESID_TOL_,num_itr);
+}
+
+template<typename T>
+valarray<T> gauss_seidel(const matrix_crs<T>& A, const valarray<T>& f,
+      int& num_itr) {
+   valarray<T> v0 = rand_vec<T>(A.n,-1.,1.);
+   return gauss_seidel(A,f,v0,_GS_DEFAULT_RESID_TOL_,num_itr);
 }
 
 template<typename T>
@@ -184,7 +250,7 @@ void gauss_seidel_it(const matrix_crs<T>& A, const valarray<T>& f,
    
       // sweep across column.  accumulated (L+U)*v0 and find a_{jj}
       for (size_t ptr=A.row_ptr[row]; ptr < A.row_ptr[row+1]; ++ptr) {
-         if ( A.col_ind[ptr] != row ) {// (L+U)*v
+         if ( A.col_ind[ptr] != row ) {//
             LpUv -= A.val[ptr] * v[A.col_ind[ptr]];
          }
          else {// get a_{jj}
@@ -204,19 +270,19 @@ void gauss_seidel_it(const matrix_crs<T>& A, const valarray<T>& f,
 ////////////////////////////
 // {{{
 template<typename T>
-valarray<T> rbgauss_seidel(const matrix_crs<T>& A, const valarray<T>& f,
-                         int num_itr) {
+valarray<T> rbgauss_seidel(const matrix_crs<T>& A, const valarray<T>& f, 
+      const valarray<T>& v0, const T resid_tol, int& num_itr) {
    // Red-Black Gauss-Seidel method driver
    // pass in the matrix, RHS vector
-   // weight is optional.  defaults to 2./3.
+   // pass in an initial guess (there is another interface which creates a
+   //    random initial guess)
    // num_itr is the number of iterations to do.  defaults to -1, which will
    //   run until we reach the maximum number of iterations or reach tolerance
    //   On return, num_itr will have the number of iterations completed.
 
-   unsigned max_itr = 100;
-   T resid_tol = static_cast<T>(10e-8);
+   //T resid_tol = static_cast<T>(10e-8);
    
-   unsigned num_its_done, num_its_todo;
+   unsigned num_its_done;
    
    // check sizes
    if ( A.m != f.size() ) {
@@ -233,16 +299,17 @@ valarray<T> rbgauss_seidel(const matrix_crs<T>& A, const valarray<T>& f,
    }
 
    // random initial guess
-   valarray<T> v = rand_vec<T>(A.n,-1.,1.);
+   valarray<T> v = v0;
    valarray<T> resid = f-A*v;
 
    // number of iterations to do
-   if ( num_itr == -1 ) { // just do normal solve until we reach tol or max_itr
+   if ( num_itr == -1 ) { // just do normal solve until we reach tol or 
+                          // _RBGS_MAX_ITR_
    
       // do iterations
       // norm(...,0) is infinity norm
       num_its_done = 0;
-      while ( norm(resid,0) > resid_tol && num_its_done < max_itr ) {
+      while ( norm(resid,0) > resid_tol && num_its_done < _RBGS_MAX_ITR_) {
          
          rbgauss_seidel_it(A,f,v);
    
@@ -254,7 +321,7 @@ valarray<T> rbgauss_seidel(const matrix_crs<T>& A, const valarray<T>& f,
    else if ( num_itr >= 0 ) { // do exactly num_itr iterations
       // do iterations
       // norm(...,0) is infinity norm
-      num_its_todo = static_cast<unsigned>(num_itr);
+      unsigned num_its_todo = static_cast<unsigned>(num_itr);
       num_its_done = 0;
       while ( num_its_done < num_its_todo ) {
          
@@ -270,8 +337,38 @@ valarray<T> rbgauss_seidel(const matrix_crs<T>& A, const valarray<T>& f,
       exit(-1);
    }
 
-   num_itr = num_its_done;
+   num_itr = static_cast<int>(num_its_done);
    return v;
+}
+
+// specify resid (or default)
+template<typename T>
+valarray<T> rbgauss_seidel(const matrix_crs<T>& A, const valarray<T>& f, 
+      const T resid_tol, int& num_itr) {
+   valarray<T> v0 = rand_vec<T>(A.n,-1.,1.);
+   return rbgauss_seidel(A,f,v0,resid_tol,num_itr);
+}
+
+template<typename T>
+valarray<T> rbgauss_seidel(const matrix_crs<T>& A, const valarray<T>& f, 
+      const T resid_tol) {
+   int num_itr = -1;
+   valarray<T> v0 = rand_vec<T>(A.n,-1.,1.);
+   return rbgauss_seidel(A,f,v0,resid_tol,num_itr);
+}
+
+// specify num_itr (or default)
+template<typename T>
+valarray<T> rbgauss_seidel(const matrix_crs<T>& A, const valarray<T>& f, 
+      const valarray<T>& v0, int& num_itr) {
+   return rbgauss_seidel(A,f,v0,_GS_DEFAULT_RESID_TOL_,num_itr);
+}
+
+template<typename T>
+valarray<T> rbgauss_seidel(const matrix_crs<T>& A, const valarray<T>& f,
+      int& num_itr) {
+   valarray<T> v0 = rand_vec<T>(A.n,-1.,1.);
+   return rbgauss_seidel(A,f,v0,_GS_DEFAULT_RESID_TOL_,num_itr);
 }
 
 template<typename T>
@@ -333,21 +430,61 @@ void rbgauss_seidel_it(const matrix_crs<T>& A, const valarray<T>& f,
 
 
 // Force instantiation
+// WJ
 template valarray<double> wjacobi<double>(const matrix_crs<double>&,
-      const valarray<double>&, const double, const int);
+      const valarray<double>&, const valarray<double>&, const double,
+      const double, int&);
+
+template valarray<double> wjacobi(const matrix_crs<double>&, 
+      const valarray<double>&, const double, const double, int&);
+
+template valarray<double> wjacobi(const matrix_crs<double>&, 
+      const valarray<double>&, const double, const double);
+
+template valarray<double> wjacobi(const matrix_crs<double>&,
+      const valarray<double>&, const valarray<double>&, const double, int&);
+
+template valarray<double> wjacobi(const matrix_crs<double>&, 
+      const valarray<double>&, const double w, int&);
 
 template void wjacobi_it<double>(const matrix_crs<double>&,
       const valarray<double>&, const valarray<double>&, valarray<double>&,
       const double);
 
+// GS
 template valarray<double> gauss_seidel<double>(const matrix_crs<double>&,
-      const valarray<double>&, const int);
+      const valarray<double>&, const valarray<double>&, const double, int&);
+
+template valarray<double> gauss_seidel(const matrix_crs<double>&, 
+      const valarray<double>&, const double, int&);
+
+template valarray<double> gauss_seidel(const matrix_crs<double>&, 
+      const valarray<double>&, const double);
+
+template valarray<double> gauss_seidel(const matrix_crs<double>&,
+      const valarray<double>&, const valarray<double>&, int&);
+
+template valarray<double> gauss_seidel(const matrix_crs<double>&, 
+      const valarray<double>&, int&);
 
 template void gauss_seidel_it<double>(const matrix_crs<double>&,
       const valarray<double>&, valarray<double>&);
 
+// RBGS
 template valarray<double> rbgauss_seidel<double>(const matrix_crs<double>&,
-      const valarray<double>&, const int);
+      const valarray<double>&, const valarray<double>&, const double, int&);
+
+template valarray<double> rbgauss_seidel(const matrix_crs<double>&, 
+      const valarray<double>&, const double, int&);
+
+template valarray<double> rbgauss_seidel(const matrix_crs<double>&, 
+      const valarray<double>&, const double);
+
+template valarray<double> rbgauss_seidel(const matrix_crs<double>&,
+      const valarray<double>&, const valarray<double>&, int&);
+
+template valarray<double> rbgauss_seidel(const matrix_crs<double>&, 
+      const valarray<double>&, int&);
 
 template void rbgauss_seidel_it<double>(const matrix_crs<double>&,
       const valarray<double>&, valarray<double>&);
