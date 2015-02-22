@@ -453,7 +453,7 @@ void test_model_problems(void) {
 ///////////////////////
 void test_wjacobi(void) {
    // {{{
-   unsigned Lx = 6;
+   unsigned Lx = 3;
    matrix_crs<double> A = model_problem_1d(Lx,0.);
    valarray<double> f(0.,pow(2,Lx)-1);
    valarray<double> v0,v1;
@@ -461,11 +461,13 @@ void test_wjacobi(void) {
 
    // use the driver to set things up
    v0 = wjacobi<double>(A,f,2./3.,zero);
+   v0 /= norm(v0,0);
    v1 = v0;
 
    for (unsigned i=0; i < 100; ++i) {
       v0 = v1;
-      wjacobi_it<double>(A,f,v0,v1,2./3.);
+      //wjacobi_it<double>(A,f,v0,v1,2./3.);
+      wjacobi_ip<double>(A,f,v1,1,2./3.);
 
       cout << "\\|error\\|_inf = " << norm(v1,0) << endl;
    }
@@ -483,6 +485,7 @@ void test_gauss_seidel(void) {
 
    // use the driver to set things up
    v = gauss_seidel<double>(A,f,zero);
+   v /= norm(v,0);
 
    for (unsigned i=0; i < 100; ++i) {
       gauss_seidel_it<double>(A,f,v);
@@ -503,6 +506,7 @@ void test_rbgauss_seidel(void) {
 
    // use the driver to set things up
    v = rbgauss_seidel<double>(A,f,zero);
+   v /= norm(v,0);
 
    for (unsigned i=0; i < 100; ++i) {
       rbgauss_seidel_it<double>(A,f,v);
@@ -521,7 +525,7 @@ void test_mg_1d_intergrid_operators(void) {
    // {{{
    int L = 3;
 
-   matrix_crs<double> P = operator_1d_interp_lin<double>(L-1);
+   matrix_crs<double> P = operator_1d_interp_lin<double>(L);
    cout << "P = " << endl;
    P.print_full();
   
@@ -535,6 +539,42 @@ void test_mg_1d_intergrid_operators(void) {
    // }}}
 }
 
+void test_mg_1d_vcycle(void) {
+   
+   // zero RHS
+   unsigned L = 3, Lx = 4, n = pow(2,Lx)-1;
+   double sigma = 0.;
+   valarray<double> f(0.,n);
+   valarray<double> v0 = rand_vec<double>(n,-1.,1.), v(0.,n);
+   v0 /= norm(v0,0);
+  
+   // make a function to build A that depends only on the grid level
+   // (so fix sigma in the beginning)
+   auto build_A = [=](unsigned _Lx) -> matrix_crs<double>  // [=] pass by copy
+      {return model_problem_1d<double>(_Lx,sigma);};
+   auto build_P = [](unsigned _Lx) -> matrix_crs<double>
+      {return operator_1d_interp_lin<double>(_Lx);};
+   auto build_R = [](unsigned _Lx) -> matrix_crs<double>
+      {return operator_1d_restrict_inj<double>(_Lx);};
+      //{return operator_1d_restrict_full<double>(_Lx);};
+
+   auto smoother = [](const matrix_crs<double>& _A, const valarray<double>& _f,
+         valarray<double>& _v, unsigned _num_itr)
+      {wjacobi_ip<double>(_A,_f,_v,_num_itr);};
+      //{gauss_seidel_ip<double>(_A,_f,_v,_num_itr);};
+      //{rb_gauss_seidel_ip<double>(_A,_f,_v,_num_itr);};
+
+
+   // build levels
+   vector<level<double>> levels = build_levels<double>(build_A, f, build_P,
+         build_R, smoother, L, Lx, v0);
+
+   // do V cycle
+   cout << "starting error = " << norm(levels[0].v,0) << endl;
+   vcycle(levels, levels.begin(), 3, 2);
+   cout << "ending error   = " << norm(levels[0].v,0) << endl;
+
+}
 
 
 
@@ -555,7 +595,7 @@ int main() {
    //test_crs_matvec();
    
    // Model problems
-   test_model_problems();
+   //test_model_problems();
 
    // Classical solvers
    //test_wjacobi();
@@ -564,7 +604,7 @@ int main() {
    
    // Multigrid
    //test_mg_1d_intergrid_operators();
-
+   test_mg_1d_vcycle();
 
    return 0;
 }

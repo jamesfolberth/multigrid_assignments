@@ -31,7 +31,7 @@ using namespace std;
 #define _PRINT_VECTOR_WIDTH_ 12
 
 
-#define _ELEMENT_ZERO_TOL_ 10e-15
+#define _ELEMENT_ZERO_TOL_ 10e-16
 
 // misc
 #define MIN(a,b) (((a)<(b)) ? a : b)
@@ -46,28 +46,21 @@ template<typename T>
 void print_vector(valarray<T>& v);
 
 template<typename T>
+void print_vector(const valarray<T>& v);
+
+
+template<typename T>
 valarray<T> rand_vec(const unsigned m, const T low=0., const T high=1.);
+
 
 template<typename T>
 T norm(const valarray<T>& v, const unsigned p);
-
-
-//// operations on vectors
-//template<typename T>
-//vector<T> operator*(const vector<T>& a, const T val);
-//
-//template<typename T>
-//vector<T> operator+(const vector<T>& a, const vector<T>& b);
-//
-//template<typename T>
-//vector<T> operator-(const vector<T>& a, const vector<T>& b);
-
-
 
 
 //////////
 // Misc //
 //////////
 int pow(int b, int e);
+unsigned pow(unsigned b, unsigned e);
 
 #endif

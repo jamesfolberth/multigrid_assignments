@@ -28,6 +28,31 @@ using
 =====
 Some people recommend not using the using directive in header files.  Probably doesn't matter for me.
 
+
+lambdas
+=======
+Can't implicitly convert a lambda function that captures variables into a function pointer.  Like, it's not in the standard or something.  I can use the function class from the <functional> header.
+
+http://stackoverflow.com/questions/5853186/conversion-of-lambda-expression-to-function-pointer?lq=1
+
+
+template iterators
+==================
+I tried something like vector<level<T>>::iterator.  g++ said this wasn't a type.  I needed to define this as a template typename by using
+   typename vector<level<T>>::iterator
+
+since the iterator is dependant on T.
+
+http://stackoverflow.com/questions/5192874/question-about-vector-iterator-in-template-functions
+
+
+
 TODO
 ====
+* LU+PP direct solve (probably okay to go to dense array)
+* Make mu-cycle from v-cycle and make v-cycle a special interface
+* discrete L^2 norm
 
+* Uniform iterface for smoothers (copy to GS/RBGS)
+** Move specification of w to very end of drivers, so WJ/GS/RBGS are the 
+   same up until w

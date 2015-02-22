@@ -23,6 +23,12 @@
 
 using namespace std;
 
+// All smoothers have an interface of the form
+//    void smoother_ip(const A, const f, v, num_itr);
+//
+// Weighted Jacobi necessarily makes a copy, whereas GS/RBGS don't make a copy
+// but rather work on v0 in place.
+
 ////////
 // WJ //
 ////////
@@ -50,10 +56,15 @@ template<typename T>
 valarray<T> wjacobi(const matrix_crs<T>& A, const valarray<T>& f, 
       const T w=_WJ_DEFAULT_W_, int& num_itr = -1);
 
+// iteration
 template<typename T>
 void wjacobi_it(const matrix_crs<T>& A, const valarray<T>& f,
       const valarray<T>& v0, valarray<T>& v1, const T w);
 
+// in place (sort of)
+template<typename T>
+void wjacobi_ip(const matrix_crs<T>& A, const valarray<T>& f,
+      valarray<T>& v, unsigned num_itr, const T w=_WJ_DEFAULT_W_);
 
 ////////
 // GS //
@@ -82,6 +93,7 @@ template<typename T>
 valarray<T> gauss_seidel(const matrix_crs<T>& A, const valarray<T>& f, 
       int& num_itr = -1);
 
+// iteration
 template<typename T>
 void gauss_seidel_it(const matrix_crs<T>& A, const valarray<T>& f,
       valarray<T>& v);
@@ -114,6 +126,7 @@ template<typename T>
 valarray<T> rbgauss_seidel(const matrix_crs<T>& A, const valarray<T>& f, 
       int& num_itr = -1);
 
+// iteration
 template<typename T>
 void rbgauss_seidel_it(const matrix_crs<T>& A, const valarray<T>& f,
       valarray<T>& v);

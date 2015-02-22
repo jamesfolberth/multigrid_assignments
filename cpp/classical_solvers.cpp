@@ -109,7 +109,7 @@ valarray<T> wjacobi(const matrix_crs<T>& A, const valarray<T>& f,
    return wjacobi(A,f,v0,w,_WJ_DEFAULT_RESID_TOL_,num_itr);
 }
 
-
+// iteration
 template<typename T>
 void wjacobi_it(const matrix_crs<T>& A, const valarray<T>& f,
              const valarray<T>& v0, valarray<T>& v1, const T w) {
@@ -134,6 +134,20 @@ void wjacobi_it(const matrix_crs<T>& A, const valarray<T>& f,
       v1[row] = (1.-w)*v0[row]+w*(LpUv+f[row])/ajj;
    }
 }
+
+// in place (with a copy)
+template<typename T>
+void wjacobi_ip(const matrix_crs<T>& A, const valarray<T>& f,
+      valarray<T>& v, unsigned num_itr, const T w) {
+   // do exactly num_itr iterations, working in place (as much as possible)
+   valarray<T> vprev = v;
+   for (unsigned i = 0; i < num_itr; ++i) {
+      wjacobi_it(A,f,vprev,v,w);
+      vprev = v;
+   }
+}
+
+
 
 // }}}
 
@@ -449,6 +463,11 @@ template valarray<double> wjacobi(const matrix_crs<double>&,
 template void wjacobi_it<double>(const matrix_crs<double>&,
       const valarray<double>&, const valarray<double>&, valarray<double>&,
       const double);
+
+template void wjacobi_ip(const matrix_crs<double>&,
+      const valarray<double>&, valarray<double>&, unsigned num_itr,
+      const double);
+ 
 
 // GS
 template valarray<double> gauss_seidel<double>(const matrix_crs<double>&,

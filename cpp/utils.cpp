@@ -22,6 +22,16 @@ void print_vector(valarray<T>& v) {
    cout << endl;
 }
 
+template<typename T>
+void print_vector(const valarray<T>& v) {
+   for (size_t i = 0; i < v.size(); ++i) {
+      cout << setw(_PRINT_VECTOR_WIDTH_) << setfill(' ') 
+           << setprecision(_PRINT_VECTOR_PREC_)
+           << static_cast<double>(v[i]) << endl;
+   }
+   cout << endl;
+}
+
 // return a vector with uniform[0,1] random entries
 template<typename T>
 valarray<T> rand_vec(const unsigned m, const T low, const T high) {
@@ -39,8 +49,9 @@ valarray<T> rand_vec(const unsigned m, const T low, const T high) {
 }
 
 // vector p-norms
-// use p=0 as infinity norm
-// p=2 is like BLAS dnrm2
+// p = 0 is infinity norm
+// p = 1 is l^1 norm
+// p = 2 is l^2 norm; like BLAS dnrm2
 template<typename T>
 T norm(const valarray<T>& v, const unsigned p) {
    T res = 0, scale = 0., absvi, ssq = 1., tmp;
@@ -130,6 +141,7 @@ unsigned pow(unsigned b, unsigned e) {
 
 // Force instantiation
 template void print_vector<double>(valarray<double>& v);
+template void print_vector<double>(const valarray<double>& v);
 template valarray<double> rand_vec<double>(const unsigned,
                                          const double, const double);
 template double norm<double>(const valarray<double>&, const unsigned);
