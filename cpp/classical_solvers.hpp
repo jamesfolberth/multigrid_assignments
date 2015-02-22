@@ -17,9 +17,9 @@
 #define _GS_DEFAULT_RESID_TOL_ 10e-8
 #define _RBGS_DEFAULT_RESID_TOL_ 10e-8
 
-#define _WJ_MAX_ITR_ 100
-#define _GS_MAX_ITR_ 100
-#define _RBGS_MAX_ITR_ 100
+#define _WJ_MAX_ITR_ 1000
+#define _GS_MAX_ITR_ 1000
+#define _RBGS_MAX_ITR_ 1000
 
 using namespace std;
 
@@ -98,6 +98,11 @@ template<typename T>
 void gauss_seidel_it(const matrix_crs<T>& A, const valarray<T>& f,
       valarray<T>& v);
 
+// in place
+template<typename T>
+void gauss_seidel_ip(const matrix_crs<T>& A, const valarray<T>& f,
+      valarray<T>& v, unsigned num_itr);
+
 
 //////////
 // RBGS //
@@ -130,6 +135,12 @@ valarray<T> rbgauss_seidel(const matrix_crs<T>& A, const valarray<T>& f,
 template<typename T>
 void rbgauss_seidel_it(const matrix_crs<T>& A, const valarray<T>& f,
       valarray<T>& v);
+
+// in place
+template<typename T>
+void rbgauss_seidel_ip(const matrix_crs<T>& A, const valarray<T>& f,
+      valarray<T>& v, unsigned num_itr);
+
 
 
 #endif

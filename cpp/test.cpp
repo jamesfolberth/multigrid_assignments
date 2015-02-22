@@ -4,6 +4,7 @@
 // Spring 2015
 
 #include <iostream>
+#include <iomanip>
 #include <valarray>
 #include <vector>
 #include <random> // randomly generated tests
@@ -509,7 +510,8 @@ void test_rbgauss_seidel(void) {
    v /= norm(v,0);
 
    for (unsigned i=0; i < 100; ++i) {
-      rbgauss_seidel_it<double>(A,f,v);
+      //rbgauss_seidel_it<double>(A,f,v);
+      rbgauss_seidel_ip<double>(A,f,v,1);
 
       cout << "\\|error\\|_inf = " << norm(v,0) << endl;
    }
@@ -540,13 +542,60 @@ void test_mg_1d_intergrid_operators(void) {
 }
 
 void test_mg_1d_vcycle(void) {
-   
-   // zero RHS
-   unsigned L = 3, Lx = 4, n = pow(2,Lx)-1;
-   double sigma = 0.;
-   valarray<double> f(0.,n);
-   valarray<double> v0 = rand_vec<double>(n,-1.,1.), v(0.,n);
-   v0 /= norm(v0,0);
+   // {{{ 
+   unsigned L = 17, Lx = 20, n = pow(2,Lx)-1;
+   double sigma = 0., resid_nrm, err_nrm, resid_nrm_prev;
+   valarray<double> f(0.,n), u(0.,n), v0(0.,n), v(0.,n),
+      resid(0.,n), err(0.,n);
+
+   double xi = 0.,C = 2., k = 3.;
+
+   int mode = 2;
+   switch (mode) {
+      case 0:
+         // zero RHS
+         v0 = rand_vec<double>(n,-1.,1.);
+         f *= 0.; u *= 0.;
+         break;
+
+      case 1:
+         // sin(pi*k*x) RHS
+         v0 = rand_vec<double>(n,-1.,1.);
+
+         for (unsigned i=0; i < n; ++i) {
+            f[i] = C*sin(k*_PI_*double(i+1-0)/double(n+1));
+            u[i] = C/(pow(_PI_*k,2.)+sigma)*sin(k*_PI_*double(i+1-0)/double(n+1));
+            //cout << setprecision(10) << double(i+1-0)/double(n+1) << endl;
+         }
+
+         // need to account for dirichlet BCs
+         f[0] += pow(n+1,2)*0.;
+         f[n-1] += pow(n+1,2)*0.;
+
+         break;
+
+      case 2:
+         // sin(pi*x)*exp(-x) RHS
+         v0 = rand_vec<double>(n,-1.,1.);
+
+         for (unsigned i=0; i < n; ++i) {
+            xi = double(i+1-0)/double(n+1);
+            u[i] = sin(_PI_*xi)*exp(-xi);
+            f[i] = exp(-xi)*((-1+_PI_*_PI_+sigma)*sin(_PI_*xi) 
+                  + 2.*_PI_*cos(_PI_*xi));
+         }
+
+         // need to account for dirichlet BCs
+         f[0] += pow(n+1,2)*0.;
+         f[n-1] += pow(n+1,2)*0.;
+
+         break;
+ 
+      default:
+         cerr << "error: test.cpp:test_mg_1d_vcycle: bad mode" << endl;
+         exit(-1);
+   }
+
   
    // make a function to build A that depends only on the grid level
    // (so fix sigma in the beginning)
@@ -555,14 +604,14 @@ void test_mg_1d_vcycle(void) {
    auto build_P = [](unsigned _Lx) -> matrix_crs<double>
       {return operator_1d_interp_lin<double>(_Lx);};
    auto build_R = [](unsigned _Lx) -> matrix_crs<double>
-      {return operator_1d_restrict_inj<double>(_Lx);};
-      //{return operator_1d_restrict_full<double>(_Lx);};
+      //{return operator_1d_restrict_inj<double>(_Lx);};
+      {return operator_1d_restrict_full<double>(_Lx);};
 
    auto smoother = [](const matrix_crs<double>& _A, const valarray<double>& _f,
          valarray<double>& _v, unsigned _num_itr)
       {wjacobi_ip<double>(_A,_f,_v,_num_itr);};
       //{gauss_seidel_ip<double>(_A,_f,_v,_num_itr);};
-      //{rb_gauss_seidel_ip<double>(_A,_f,_v,_num_itr);};
+      //{rbgauss_seidel_ip<double>(_A,_f,_v,_num_itr);};
 
 
    // build levels
@@ -570,10 +619,33 @@ void test_mg_1d_vcycle(void) {
          build_R, smoother, L, Lx, v0);
 
    // do V cycle
-   cout << "starting error = " << norm(levels[0].v,0) << endl;
-   vcycle(levels, levels.begin(), 3, 2);
-   cout << "ending error   = " << norm(levels[0].v,0) << endl;
+   cout << "Matrix A is " << levels[0].A.m << " x " << levels[0].A.n << endl;
+   
+   resid = levels[0].f - levels[0].A*levels[0].v;
+   err = u-levels[0].v;
+   resid_nrm_prev = pow(levels[0].A.n+1,-0.5)*norm(resid,2);
+   err_nrm = pow(levels[0].A.n+1,-0.5)*norm(err,2);
+   
+   cout << "||r||_h = " << _PRINT_VECTOR_FORMAT_ << resid_nrm_prev
+        << "  ||e||_h = " << _PRINT_VECTOR_FORMAT_ << err_nrm << endl;
+ 
+   for (unsigned i = 0; i < 10; ++i) {
+      vcycle(levels, levels.begin(), 2, 1);
 
+      resid = levels[0].f - levels[0].A*levels[0].v;
+      err = u-levels[0].v;
+      resid_nrm = pow(levels[0].A.n+1,-0.5)*norm(resid,2);
+      err_nrm = pow(levels[0].A.n+1,-0.5)*norm(err,2);
+
+      cout << "||r||_h = " << _PRINT_VECTOR_FORMAT_ << resid_nrm
+           << "  ||e||_h = " << _PRINT_VECTOR_FORMAT_ << err_nrm
+           << "  ratio = " << _PRINT_VECTOR_FORMAT_ 
+           << resid_nrm/resid_nrm_prev << "  at i = " << i << endl;
+
+      resid_nrm_prev = resid_nrm;
+   }
+
+   // }}}
 }
 
 

@@ -31,7 +31,7 @@ vector<level<T>> build_levels(function<matrix_crs<T>(unsigned)> build_A,
    // A,P,R
    for (unsigned l = 0; l < L; ++l) {
       levels[l].A = build_A(Lx-l);
-      levels[l].f = valarray<T>(0.,levels[l].A.m);
+      levels[l].f = valarray<T>(0.,levels[l].A.n);
       levels[l].v = valarray<T>(0.,levels[l].A.n);
       levels[l].P = build_P(Lx-l);
       levels[l].R = build_R(Lx-l);
@@ -74,35 +74,40 @@ vector<level<T>> build_levels(function<matrix_crs<T>(unsigned)> build_A,
 ////////////
 // {{{
 template<typename T>
-void vcycle(vector<level<T>>& levels, typename vector<level<T>>::iterator it,
-      unsigned nu1, unsigned nu2) {                                      
-   // Perform a (nu1,nu2) V cycle on the levels                        
+void mucycle(vector<level<T>>& levels, typename vector<level<T>>::iterator it,
+      unsigned nu1, unsigned nu2, unsigned mu) {
+   // Perform a (nu1,nu2,mu) Mu-cycle on the levels                        
    // the iterator it points to our current position in the levels vector.
+
+   valarray<T> resid(0.,it->f.size());
 
    // pre-smooth
    it->smoother_ip(it->A, it->f, it->v, nu1);
-   cout << "pre-smooth error (" << it->v.size() << ") = " << norm(it->v,0) << endl;
+   //resid = it->f - (it->A)*(it->v);
+   //cout << "pre-smooth h-resid (" << it->v.size() << ") = " << sqrt(1./(it->A.n+1))*norm(resid,2) << endl;
 
    if ( it == levels.end()-1 ) { // if we're on the coarsest grid
       // smooth the dick out of it
       // TODO direct solve
-      cout << "Direct solve start (" << it->v.size() << ") = " << norm(it->v,0) << endl;
-      it->smoother_ip(it->A, it->f, it->v, 100);
-      cout << "Direct solve error (" << it->v.size() << ") = " << norm(it->v,0) << endl;
-   }
+      it->smoother_ip(it->A, it->f, it->v, 1000);
+      //resid = it->f - (it->A)*(it->v);
+      //cout << "Direct solve h-resid (" << it->v.size() << ") = " << sqrt(1./(it->A.n+1))*norm(resid,2) << endl;
+   } 
 
    else { // we're not on the coarsest grid
 
       // prepare to coarsen
-      valarray<T> temp = it->f;
-      temp -= (it->A)*(it->v);
+      //valarray<T> temp = it->f;
+      //temp -= (it->A)*(it->v);
+      resid = it->f;
+      resid -= (it->A)*(it->v);
 
       //print_vector((it->f) - (it->A)*(it->v)); // TODO why doesn't this work?
-      next(it)->f = (it->R)*temp;
+      next(it)->f = (it->R)*resid;
       next(it)->v *= 0.;
 
       // move to coarser grid
-      vcycle(levels, next(it), nu1, nu2);
+      mucycle(levels, next(it), nu1, nu2, mu);
 
       // correct this grid using coarse grid
       it->v += (next(it)->P)*(next(it)->v);
@@ -110,10 +115,18 @@ void vcycle(vector<level<T>>& levels, typename vector<level<T>>::iterator it,
 
    // post-smooth
    it->smoother_ip(it->A, it->f, it->v, nu2);
-   cout << "post-smooth error (" << it->v.size() << ") = " << norm(it->v,0) << endl;
+   //resid = it->f - (it->A)*(it->v);
+   //cout << "post-smooth resid (" << it->v.size() << ") = " << pow(1./(it->A.n+1),0.5)*norm(resid,2) << endl;
    return;
 }
 
+template<typename T>
+void vcycle(vector<level<T>>& levels, typename vector<level<T>>::iterator it,
+      unsigned nu1, unsigned nu2) {
+   // Perform a (nu1,nu2) V-cycle on the levels
+   // A V cycle is just a Mu-cycle with mu=1
+   mucycle(levels, it, nu1, nu2, 1);
+}
 
 // }}}
 
@@ -224,6 +237,10 @@ template vector<level<double>> build_levels(
          const valarray<double>&, valarray<double>&, unsigned)>,
       unsigned L, unsigned Lx);
 
+
+template void mucycle(vector<level<double>>& levels, 
+      vector<level<double>>::iterator, unsigned nu1, unsigned nu2,
+      unsigned mu);
 
 template void vcycle(vector<level<double>>& levels, 
       vector<level<double>>::iterator, unsigned nu1, unsigned nu2);

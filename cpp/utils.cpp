@@ -48,7 +48,7 @@ valarray<T> rand_vec(const unsigned m, const T low, const T high) {
    return v;
 }
 
-// vector p-norms
+// vector norms
 // p = 0 is infinity norm
 // p = 1 is l^1 norm
 // p = 2 is l^2 norm; like BLAS dnrm2

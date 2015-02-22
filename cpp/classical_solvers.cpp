@@ -276,6 +276,17 @@ void gauss_seidel_it(const matrix_crs<T>& A, const valarray<T>& f,
    }
 }
 
+// in place 
+template<typename T>
+void gauss_seidel_ip(const matrix_crs<T>& A, const valarray<T>& f,
+      valarray<T>& v, unsigned num_itr) {
+   // do exactly num_itr iterations, working in place
+   for (unsigned i = 0; i < num_itr; ++i) {
+      //cout << norm(f-A*v,0) << endl;
+      gauss_seidel_it(A,f,v);
+   }
+}
+
 // }}}
 
 ////////////////////////////
@@ -436,8 +447,19 @@ void rbgauss_seidel_it(const matrix_crs<T>& A, const valarray<T>& f,
       // assemble for the update
       v[row] = (LpUv+f[row])/ajj;
    }
-
 }
+
+// in place 
+template<typename T>
+void rbgauss_seidel_ip(const matrix_crs<T>& A, const valarray<T>& f,
+      valarray<T>& v, unsigned num_itr) {
+   // do exactly num_itr iterations, working in place
+   for (unsigned i = 0; i < num_itr; ++i) {
+      //cout << norm(f-A*v,0) << endl;
+      rbgauss_seidel_it(A,f,v);
+   }
+}
+
 
 // }}}
 
@@ -488,6 +510,9 @@ template valarray<double> gauss_seidel(const matrix_crs<double>&,
 template void gauss_seidel_it<double>(const matrix_crs<double>&,
       const valarray<double>&, valarray<double>&);
 
+template void gauss_seidel_ip(const matrix_crs<double>&,
+      const valarray<double>&, valarray<double>&, unsigned num_itr);
+ 
 // RBGS
 template valarray<double> rbgauss_seidel<double>(const matrix_crs<double>&,
       const valarray<double>&, const valarray<double>&, const double, int&);
@@ -507,3 +532,6 @@ template valarray<double> rbgauss_seidel(const matrix_crs<double>&,
 template void rbgauss_seidel_it<double>(const matrix_crs<double>&,
       const valarray<double>&, valarray<double>&);
 
+template void rbgauss_seidel_ip(const matrix_crs<double>&,
+      const valarray<double>&, valarray<double>&, unsigned num_itr);
+ 

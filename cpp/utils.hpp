@@ -30,6 +30,9 @@ using namespace std;
 #define _PRINT_VECTOR_PREC_ 5
 #define _PRINT_VECTOR_WIDTH_ 12
 
+#define _PRINT_VECTOR_FORMAT_ setw(_PRINT_VECTOR_WIDTH_) << setfill(' ') << setprecision(_PRINT_VECTOR_PREC_)
+
+
 
 #define _ELEMENT_ZERO_TOL_ 10e-16
 

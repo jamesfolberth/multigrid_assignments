@@ -133,42 +133,42 @@ function test()
    #@time b_control = A*x # use Julia's matvec
    #println("||b-A*x||_Inf = ",norm(b-b_control,Inf))
 
-   #Lx = 8
-   #A = ModelProblem1D(Lx,1e0)
-   #x = linspace(0,1,2^Lx+1)
-   #f = exp(-x).*(pi^2*sin(pi*x)+2.*pi*cos(pi*x))
-   #f[1]=0.; f[end]=0.
-   #v = A\f[2:end-1]
-   #v = [0, v, 0]
-
-   #plot(x,v-sin(pi*x).*exp(-x))
-
-   Lx = 6
-   Ly = 8
-   A = ModelProblem2D(Lx,Ly,1e0)
+   Lx = 8
+   A = ModelProblem1D(Lx,1e0)
    x = linspace(0,1,2^Lx+1)
-   y = linspace(0,1,2^Ly+1)
+   f = exp(-x).*(pi^2*sin(pi*x)+2.*pi*cos(pi*x))
+   f[1]=0.; f[end]=0.
+   v = A\f[2:end-1]
+   v = [0, v, 0]
 
-   u = Array(Float64, (length(x)-2, length(y)-2))
-   f = Array(Float64, (length(x)-2, length(y)-2))
-   #@time begin
-   for j = 2:length(y)-1
-      for i = 2:length(x)-1
-         # XXX @simd can't inline sin/cos/exp, so won't get SIMD to work
-         @inbounds u[i-1,j-1] = sin(pi*x[i])*sin(pi*y[j])*exp(-x[i]^2+y[j]^2)
-         @inbounds f[i-1,j-1] = exp(-x[i]^2+y[j]^2)*(
-            -4.*pi*y[j]*cos(pi*y[j])*sin(pi*x[i]) + (
-            4*pi*x[i]*cos(pi*x[i]) + (1+2*pi^2-4*x[i]^2-4*y[j]^2)*sin(pi*x[i]))
-            *sin(pi*y[j]))
-      end
-   end
+   plot(x,sin(pi*x).*exp(-x)-v)
+
+   #Lx = 6
+   #Ly = 8
+   #A = ModelProblem2D(Lx,Ly,1e0)
+   #x = linspace(0,1,2^Lx+1)
+   #y = linspace(0,1,2^Ly+1)
+
+   #u = Array(Float64, (length(x)-2, length(y)-2))
+   #f = Array(Float64, (length(x)-2, length(y)-2))
+   ##@time begin
+   #for j = 2:length(y)-1
+   #   for i = 2:length(x)-1
+   #      # XXX @simd can't inline sin/cos/exp, so won't get SIMD to work
+   #      @inbounds u[i-1,j-1] = sin(pi*x[i])*sin(pi*y[j])*exp(-x[i]^2+y[j]^2)
+   #      @inbounds f[i-1,j-1] = exp(-x[i]^2+y[j]^2)*(
+   #         -4.*pi*y[j]*cos(pi*y[j])*sin(pi*x[i]) + (
+   #         4*pi*x[i]*cos(pi*x[i]) + (1+2*pi^2-4*x[i]^2-4*y[j]^2)*sin(pi*x[i]))
+   #         *sin(pi*y[j]))
+   #   end
    #end
-     
-   v = A\reshape(f,(length(f),1)) # constant y
-   v = reshape(v, (length(x)-2, length(y)-2))
+   ##end
+   #  
+   #v = A\reshape(f,(length(f),1)) # constant y
+   #v = reshape(v, (length(x)-2, length(y)-2))
 
-   error = u-v
-   display(maxabs(error[:]))
+   #error = u-v
+   #display(maxabs(error[:]))
 
    return
 end

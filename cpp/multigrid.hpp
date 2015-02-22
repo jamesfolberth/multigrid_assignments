@@ -75,6 +75,10 @@ vector<level<T>> build_levels(function<matrix_crs<T>(unsigned)> build_A,
 ////////////
 // {{{
 template<typename T>
+void mucycle(vector<level<T>>& levels, typename vector<level<T>>::iterator it,
+      unsigned nu1, unsigned nu2, unsigned mu=1);
+
+template<typename T>
 void vcycle(vector<level<T>>& levels, typename vector<level<T>>::iterator it,
       unsigned nu1, unsigned nu2);
 

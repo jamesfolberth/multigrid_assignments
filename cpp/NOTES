@@ -52,6 +52,7 @@ TODO
 * LU+PP direct solve (probably okay to go to dense array)
 * Make mu-cycle from v-cycle and make v-cycle a special interface
 * discrete L^2 norm
+* rbgauss_seidelt converges immediately.  Impossibru!
 
 * Uniform iterface for smoothers (copy to GS/RBGS)
 ** Move specification of w to very end of drivers, so WJ/GS/RBGS are the 
