@@ -1,0 +1,18 @@
+#set term qt persist
+set term tikz color solid size 5in,3in
+set output "mix_1.tikz"
+
+set title "Mix of modes"
+
+set key
+
+set xlabel "Iterations"
+set ylabel "Error - $\\|\\mathbf{e}\\|_\\infty$" noenhanced
+
+plot "mix_1_wj.txt" using 1:2 with lines\
+         linetype rgb "black" title "$WJ$",\
+     "mix_1_gs.txt" using 1:2 with lines\
+         linetype rgb "red" title "$GS$",\
+     "mix_1_rbgs.txt" using 1:2 with lines\
+         linetype rgb "blue" title "$RBGS$"
+

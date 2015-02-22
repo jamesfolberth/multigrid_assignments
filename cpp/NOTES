@@ -24,6 +24,10 @@ Easiest fix is to just change the function names.
 Maybe see what Armadillo does.
 
 
+using
+=====
+Some people recommend not using the using directive in header files.  Probably doesn't matter for me.
+
 TODO
 ====
 

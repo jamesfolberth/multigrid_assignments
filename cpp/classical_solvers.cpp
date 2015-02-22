@@ -80,7 +80,6 @@ valarray<T> wjacobi(const matrix_crs<T>& A, const valarray<T>& f,
 
 
 // specify resid (or default)
-
 template<typename T>
 valarray<T> wjacobi(const matrix_crs<T>& A, const valarray<T>& f, 
       const T w, const T resid_tol, int& num_itr) {

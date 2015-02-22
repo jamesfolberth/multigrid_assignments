@@ -103,54 +103,6 @@ T norm(const valarray<T>& v, const unsigned p) {
    }
 }
 
-//// operations on vectors
-//template<typename T>
-//vector<T> operator*(const vector<T>& a, const T val) {
-//   vector<T> res;
-//   res.reserve(a.size());
-//   for (auto it = a.begin(); it != a.end(); ++it) {
-//      res.push_back((*it)*val);
-//   }
-//   return res;
-//}
-//
-//
-//template<typename T>
-//vector<T> operator+(const vector<T>& a, const vector<T>& b) {
-//   vector<T> res;
-//
-//   if ( a.size() != b.size() ) {
-//      cerr << "error: utils:vector:+: dimension mismatch" << endl;
-//      exit(-1);
-//   }
-//
-//   res.reserve(a.size());
-//   for (unsigned i=0; i < a.size(); ++i) {
-//      res.push_back(a[i]+b[i]);
-//   }
-//
-//   return res;
-//}
-//
-//template<typename T>
-//vector<T> operator-(const vector<T>& a, const vector<T>& b) {
-//   vector<T> res;
-//
-//   if ( a.size() != b.size() ) {
-//      cerr << "error: utils:vector:+: dimension mismatch" << endl;
-//      exit(-1);
-//   }
-//
-//   res.reserve(a.size());
-//   for (unsigned i=0; i < a.size(); ++i) {
-//      res.push_back(a[i]-b[i]);
-//   }
-//
-//   return res;
-//}
-
-
-
 //////////
 // Misc //
 //////////
@@ -160,7 +112,17 @@ int pow(int b, int e) {
    if ( e == 0 ) return 1;
    else if ( e == 1 ) return b;
    else if ( e < 0 ) {
-      cerr << "utils.cpp:pow: negative exponent not handled" << endl;
+      cerr << "utils.cpp:pow<int>: negative exponent not handled" << endl;
+      exit(-1);
+   }
+   else return pow(b, e-1);
+}
+
+unsigned pow(unsigned b, unsigned e) {
+   if ( e == 0 ) return 1;
+   else if ( e == 1 ) return b;
+   else if ( e < 0 ) {
+      cerr << "utils.cpp:pow<unsigned>: negative exponent not handled" << endl;
       exit(-1);
    }
    else return pow(b, e-1);
@@ -171,13 +133,4 @@ template void print_vector<double>(valarray<double>& v);
 template valarray<double> rand_vec<double>(const unsigned,
                                          const double, const double);
 template double norm<double>(const valarray<double>&, const unsigned);
-
-//template vector<double> operator*(const vector<double>&, const double);
-//
-//template vector<double> operator+(const vector<double>&,
-//                                  const vector<double>&);
-//template vector<double> operator-(const vector<double>&,
-//                                  const vector<double>&);
-//
-
 

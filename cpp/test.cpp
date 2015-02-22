@@ -12,6 +12,7 @@
 #include "matrix_crs.hpp"
 #include "model_problems.hpp"
 #include "classical_solvers.hpp"
+#include "multigrid.hpp"
 
 using namespace std;
 
@@ -456,9 +457,10 @@ void test_wjacobi(void) {
    matrix_crs<double> A = model_problem_1d(Lx,0.);
    valarray<double> f(0.,pow(2,Lx)-1);
    valarray<double> v0,v1;
+   int zero = 0;
 
    // use the driver to set things up
-   v0 = wjacobi<double>(A,f,2./3.,0);
+   v0 = wjacobi<double>(A,f,2./3.,zero);
    v1 = v0;
 
    for (unsigned i=0; i < 100; ++i) {
@@ -477,9 +479,10 @@ void test_gauss_seidel(void) {
    matrix_crs<double> A = model_problem_1d(Lx,0.);
    valarray<double> f(0.,pow(2,Lx)-1);
    valarray<double> v;
+   int zero = 0;
 
    // use the driver to set things up
-   v = gauss_seidel<double>(A,f,0);
+   v = gauss_seidel<double>(A,f,zero);
 
    for (unsigned i=0; i < 100; ++i) {
       gauss_seidel_it<double>(A,f,v);
@@ -496,9 +499,10 @@ void test_rbgauss_seidel(void) {
    matrix_crs<double> A = model_problem_1d(Lx,0.);
    valarray<double> f(0.,pow(2,Lx)-1);
    valarray<double> v;
+   int zero = 0;
 
    // use the driver to set things up
-   v = rbgauss_seidel<double>(A,f,0);
+   v = rbgauss_seidel<double>(A,f,zero);
 
    for (unsigned i=0; i < 100; ++i) {
       rbgauss_seidel_it<double>(A,f,v);
@@ -508,6 +512,30 @@ void test_rbgauss_seidel(void) {
    
    // }}}
 }
+
+
+///////////////
+// Multigrid //
+///////////////
+void test_mg_1d_intergrid_operators(void) {
+   // {{{
+   int L = 3;
+
+   matrix_crs<double> P = operator_1d_interp_lin<double>(L-1);
+   cout << "P = " << endl;
+   P.print_full();
+  
+   matrix_crs<double> Rinj = operator_1d_restrict_inj<double>(L);
+   cout << "Rinj = " << endl;
+   Rinj.print_full();
+
+   matrix_crs<double> Rfull = operator_1d_restrict_full<double>(L);
+   cout << "Rfull = " << endl;
+   Rfull.print_full();
+   // }}}
+}
+
+
 
 
 int main() {
@@ -527,12 +555,15 @@ int main() {
    //test_crs_matvec();
    
    // Model problems
-   //test_model_problems();
+   test_model_problems();
 
    // Classical solvers
    //test_wjacobi();
    //test_gauss_seidel();
-   test_rbgauss_seidel();
+   //test_rbgauss_seidel();
+   
+   // Multigrid
+   //test_mg_1d_intergrid_operators();
 
 
    return 0;

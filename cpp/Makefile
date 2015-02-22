@@ -10,12 +10,15 @@ CPPFLAGS=-Wall -Wpedantic -std=c++11 -g -Og -march=native
 LDFLAGS=
 LDLIBS=-lc -lm
 
-MATLIB_COMMON= matrix_coo.cpp\
-					matrix_coo.hpp\
-					matrix_crs.cpp\
-					matrix_crs.hpp\
-					utils.hpp\
-					utils.cpp\
+COMMON_CPP= matrix_coo.cpp\
+				matrix_crs.cpp\
+				utils.cpp\
+				model_problems.o\
+				classical_solvers.cpp\
+				multigrid.cpp
+
+COMMON_HPP= $(COMMON_CPP:%.cpp=%.hpp)
+COMMON_O  = $(COMMON_CPP:%.cpp=%.o)
 
 .PHONY: all clean run prog02_fig
 
@@ -24,35 +27,39 @@ all: test run
 run: test
 	./test
 
-# Code
-test: matrix_coo.o matrix_crs.o utils.o model_problems.o classical_solvers.o test.cpp
+# Test
+test: $(COMMON_O) test.cpp
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c test.cpp
-	$(CPP) $(CPPFLAGS) -flto $(LDLIBS) $(LDFLAGS) matrix_coo.o\
-		matrix_crs.o utils.o model_problems.o classical_solvers.o test.o -o test
+	$(CPP) $(CPPFLAGS) -flto $(LDLIBS) $(LDFLAGS) $(COMMON_O) test.o -o test
 
-prog02: matrix_coo.o matrix_crs.o utils.o model_problems.o classical_solvers.o prog02.cpp
-	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c prog02.cpp
-	$(CPP) $(CPPFLAGS) -flto $(LDLIBS) $(LDFLAGS) matrix_coo.o\
-		matrix_crs.o utils.o model_problems.o classical_solvers.o \
-		prog02.o -o prog02
 
-matrix_coo.o: $(MATLIB_COMMON)
+# Common files
+matrix_coo.o: matrix_coo.cpp matrix_crs.cpp utils.cpp
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c matrix_coo.cpp
 
-matrix_crs.o: $(MATLIB_COMMON)
+matrix_crs.o: matrix_coo.cpp matrix_crs.cpp utils.cpp
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c matrix_crs.cpp
 
 utils.o: utils.cpp utils.hpp
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c utils.cpp
 
-model_problems.o: $(MATLIB_COMMON) model_problems.cpp model_problems.hpp
+model_problems.o: matrix_coo.cpp matrix_crs.cpp utils.cpp model_problems.cpp model_problems.hpp
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c model_problems.cpp
 
-classical_solvers.o: $(MATLIB_COMMON) classical_solvers.cpp classical_solvers.hpp
+classical_solvers.o: matrix_coo.cpp matrix_crs.cpp utils.cpp classical_solvers.cpp classical_solvers.hpp
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c classical_solvers.cpp
 
+multigrid.o: matrix_crs.cpp utils.cpp classical_solvers.cpp multigrid.cpp multigrid.hpp
+	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c multigrid.cpp
 
-# figures
+
+# programming assignments
+prog02: $(COMMON_O) prog02.cpp
+	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c prog02.cpp
+	$(CPP) $(CPPFLAGS) -flto $(LDLIBS) $(LDFLAGS) matrix_coo.o\
+		matrix_crs.o utils.o model_problems.o classical_solvers.o \
+		prog02.o -o prog02
+
 prog02_fig: prog02
 	./prog02
 	make -C figures/ prog02
