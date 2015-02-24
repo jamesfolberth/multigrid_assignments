@@ -50,7 +50,8 @@ http://stackoverflow.com/questions/5192874/question-about-vector-iterator-in-tem
 TODO
 ====
 * LU+PP direct solve (probably okay to go to dense array)
-* Make mu-cycle from v-cycle and make v-cycle a special interface
+* Test mu-cycle with mu != 1
+* FMG
 * discrete L^2 norm
 * rbgauss_seidelt converges immediately.  Impossibru!
 

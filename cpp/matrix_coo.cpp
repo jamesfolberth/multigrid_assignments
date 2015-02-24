@@ -67,6 +67,7 @@ void matrix_coo<T>::clean(void) {
       sort_me[i].val = val[i];
    }
 
+   // TODO this is slow
    sort(sort_me.begin(), sort_me.end(), 
          [&] (const sort_tuple& lhs, const sort_tuple& rhs) -> bool {
             if (lhs.i < rhs.i) {

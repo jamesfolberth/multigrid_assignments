@@ -52,8 +52,9 @@ class level {
 
 };
 
+// 1D model problem
 template<typename T>
-vector<level<T>> build_levels(function<matrix_crs<T>(unsigned)> build_A,
+vector<level<T>> build_levels_1d(function<matrix_crs<T>(unsigned)> build_A,
       valarray<T> f, function<matrix_crs<T>(unsigned)> build_P, 
       function<matrix_crs<T>(unsigned)> build_R,
       function<void(const matrix_crs<T>&, const valarray<T>&,
@@ -61,12 +62,30 @@ vector<level<T>> build_levels(function<matrix_crs<T>(unsigned)> build_A,
       unsigned L, unsigned Lx, const valarray<T>& v0);
 
 template<typename T>
-vector<level<T>> build_levels(function<matrix_crs<T>(unsigned)> build_A,
+vector<level<T>> build_levels_1d(function<matrix_crs<T>(unsigned)> build_A,
       valarray<T> f, function<matrix_crs<T>(unsigned)> build_P, 
       function<matrix_crs<T>(unsigned)> build_R,
       function<void(const matrix_crs<T>&, const valarray<T>&,
          valarray<T>&, unsigned)> smoother_ip,
       unsigned L, unsigned Lx);
+
+// 2D model problem
+template<typename T>
+vector<level<T>> build_levels_2d(function<matrix_crs<T>(unsigned,unsigned)> build_A,
+      valarray<T> f, function<matrix_crs<T>(unsigned,unsigned)> build_P, 
+      function<matrix_crs<T>(unsigned,unsigned)> build_R,
+      function<void(const matrix_crs<T>&, const valarray<T>&,
+         valarray<T>&, unsigned)> smoother_ip,
+      unsigned L, unsigned Lx, unsigned Ly, const valarray<T>& v0);
+
+template<typename T>
+vector<level<T>> build_levels_2d(function<matrix_crs<T>(unsigned,unsigned)> build_A,
+      valarray<T> f, function<matrix_crs<T>(unsigned,unsigned)> build_P, 
+      function<matrix_crs<T>(unsigned,unsigned)> build_R,
+      function<void(const matrix_crs<T>&, const valarray<T>&,
+         valarray<T>&, unsigned)> smoother_ip,
+      unsigned L, unsigned Lx, unsigned Ly);
+
 
 // }}}
 
@@ -89,13 +108,22 @@ void vcycle(vector<level<T>>& levels, typename vector<level<T>>::iterator it,
 /////////////////////////
 // {{{
 template<typename T>
-matrix_crs<T> operator_1d_interp_lin(unsigned lm1);
+matrix_crs<T> operator_1d_interp_lin(unsigned l);
 
 template<typename T>
 matrix_crs<T> operator_1d_restrict_inj(unsigned l);
 
 template<typename T>
 matrix_crs<T> operator_1d_restrict_full(unsigned l);
+
+template<typename T>
+matrix_crs<T> operator_2d_interp_lin(unsigned lx, unsigned ly);
+
+template<typename T>
+matrix_crs<T> operator_2d_restrict_inj(unsigned lx, unsigned ly);
+
+template<typename T>
+matrix_crs<T> operator_2d_restrict_full(unsigned lx, unsigned ly);
 
 // }}}
 

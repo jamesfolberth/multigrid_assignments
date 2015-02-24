@@ -541,6 +541,30 @@ void test_mg_1d_intergrid_operators(void) {
    // }}}
 }
 
+void test_mg_2d_intergrid_operators(void) {
+   // {{{
+   // XXX these haven't been tested on grids where Lx != Ly
+   unsigned Lx = 3, Ly = 3;
+
+   matrix_crs<double> P = operator_2d_interp_lin<double>(Lx-1,Ly-1);
+   cout << "P = " << endl;
+   P.print_full();
+ 
+   matrix_crs<double> Rinj = operator_2d_restrict_inj<double>(Lx,Ly);
+   cout << "Rinj = " << endl;
+   //Rinj.print_full();
+   cout << Rinj << endl;
+
+   matrix_crs<double> Rfull = operator_2d_restrict_full<double>(Lx,Ly);
+   cout << "Rfull = " << endl;
+   //Rfull.print_full();
+   cout << Rfull << endl;
+
+   // }}}
+}
+
+
+
 void test_mg_1d_vcycle(void) {
    // {{{ 
    unsigned L = 17, Lx = 20, n = pow(2,Lx)-1;
@@ -550,7 +574,7 @@ void test_mg_1d_vcycle(void) {
 
    double xi = 0.,C = 2., k = 3.;
 
-   int mode = 2;
+   int mode = 0;
    switch (mode) {
       case 0:
          // zero RHS
@@ -615,7 +639,7 @@ void test_mg_1d_vcycle(void) {
 
 
    // build levels
-   vector<level<double>> levels = build_levels<double>(build_A, f, build_P,
+   vector<level<double>> levels = build_levels_1d<double>(build_A, f, build_P,
          build_R, smoother, L, Lx, v0);
 
    // do V cycle
@@ -636,6 +660,83 @@ void test_mg_1d_vcycle(void) {
       err = u-levels[0].v;
       resid_nrm = pow(levels[0].A.n+1,-0.5)*norm(resid,2);
       err_nrm = pow(levels[0].A.n+1,-0.5)*norm(err,2);
+
+      cout << "||r||_h = " << _PRINT_VECTOR_FORMAT_ << resid_nrm
+           << "  ||e||_h = " << _PRINT_VECTOR_FORMAT_ << err_nrm
+           << "  ratio = " << _PRINT_VECTOR_FORMAT_ 
+           << resid_nrm/resid_nrm_prev << "  at i = " << i << endl;
+
+      resid_nrm_prev = resid_nrm;
+   }
+
+   // }}}
+}
+
+void test_mg_2d_vcycle(void) {
+   // {{{ 
+   unsigned L = 7, Lx = 10, Ly = 10, n = (pow(2,Lx)-1)*(pow(2,Ly)-1);
+   double sigma = 0., resid_nrm, err_nrm, resid_nrm_prev;
+   valarray<double> f(0.,n), u(0.,n), v0(0.,n), v(0.,n),
+      resid(0.,n), err(0.,n);
+
+   int mode = 0;
+   switch (mode) {
+      case 0:
+         // zero RHS
+         v0 = rand_vec<double>(n,-1.,1.);
+         f *= 0.; u *= 0.;
+         break;
+
+      default:
+         cerr << "error: test.cpp:test_mg_2d_vcycle: bad mode" << endl;
+         exit(-1);
+   }
+
+  
+   // make a function to build A that depends only on the grid level
+   // (so fix sigma in the beginning)
+   // [=] pass by copy
+   auto build_A = [=](unsigned _Lx, unsigned _Ly) -> matrix_crs<double>
+      {return model_problem_2d<double>(_Lx,_Ly,sigma);};
+   auto build_P = [](unsigned _Lx, unsigned _Ly) -> matrix_crs<double>
+      {return operator_2d_interp_lin<double>(_Lx,_Ly);};
+   auto build_R = [](unsigned _Lx, unsigned _Ly) -> matrix_crs<double>
+      //{return operator_2d_restrict_inj<double>(_Lx,_Ly);};
+      {return operator_2d_restrict_full<double>(_Lx,_Ly);};
+
+   auto smoother = [](const matrix_crs<double>& _A, const valarray<double>& _f,
+         valarray<double>& _v, unsigned _num_itr)
+      //{wjacobi_ip<double>(_A,_f,_v,_num_itr);};
+      //{gauss_seidel_ip<double>(_A,_f,_v,_num_itr);};
+      {rbgauss_seidel_ip<double>(_A,_f,_v,_num_itr);};
+
+
+   // build levels
+   vector<level<double>> levels = build_levels_2d<double>(build_A, f, build_P,
+         build_R, smoother, L, Lx, Ly, v0);
+
+   // do V cycle
+   cout << "Matrix A is " << levels[0].A.m << " x " << levels[0].A.n 
+        << " with " << levels[0].A.val.size() << " nonzero elements" << endl;
+   
+   resid = levels[0].f - levels[0].A*levels[0].v;
+   err = u-levels[0].v;
+   resid_nrm_prev = pow(levels[0].A.n+1,-1.)*norm(resid,2);
+   err_nrm = pow(levels[0].A.n+1,-1.)*norm(err,2);
+   
+   cout << "||r||_h = " << _PRINT_VECTOR_FORMAT_ << resid_nrm_prev
+        << "  ||e||_h = " << _PRINT_VECTOR_FORMAT_ << err_nrm << endl;
+ 
+   for (unsigned i = 0; i < 10; ++i) {
+      vcycle(levels, levels.begin(), 2, 1);
+      //mucycle(levels, levels.begin(), 2, 1, 2);
+
+      resid = levels[0].f - levels[0].A*levels[0].v;
+      err = u-levels[0].v;
+      resid_nrm = pow(levels[0].A.n+1,-1.)*norm(resid,2);
+      //resid_nrm = norm(resid,0);
+      err_nrm = pow(levels[0].A.n+1,-1.)*norm(err,2);
+      //err_nrm = norm(err,0);
 
       cout << "||r||_h = " << _PRINT_VECTOR_FORMAT_ << resid_nrm
            << "  ||e||_h = " << _PRINT_VECTOR_FORMAT_ << err_nrm
@@ -676,7 +777,9 @@ int main() {
    
    // Multigrid
    //test_mg_1d_intergrid_operators();
-   test_mg_1d_vcycle();
+   //test_mg_2d_intergrid_operators();
+   //test_mg_1d_vcycle();
+   test_mg_2d_vcycle();
 
    return 0;
 }
