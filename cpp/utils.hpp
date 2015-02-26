@@ -59,6 +59,13 @@ valarray<T> rand_vec(const unsigned m, const T low=0., const T high=1.);
 template<typename T>
 T norm(const valarray<T>& v, const unsigned p);
 
+template<typename T>
+T dl2norm(const valarray<T>& v, const unsigned nx);
+
+template<typename T>
+T dl2norm(const valarray<T>& v, const unsigned nx, const unsigned ny);
+
+
 
 //////////
 // Misc //

@@ -52,9 +52,4 @@ TODO
 * LU+PP direct solve (probably okay to go to dense array)
 * Test mu-cycle with mu != 1
 * FMG
-* discrete L^2 norm
-* rbgauss_seidelt converges immediately.  Impossibru!
 
-* Uniform iterface for smoothers (copy to GS/RBGS)
-** Move specification of w to very end of drivers, so WJ/GS/RBGS are the 
-   same up until w

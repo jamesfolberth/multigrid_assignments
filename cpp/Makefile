@@ -65,12 +65,20 @@ prog02_fig: prog02
 	./prog02
 	make -C figures/ prog02
 
+prog03: $(COMMON_O) prog03.cpp
+	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c prog03.cpp
+	$(CPP) $(CPPFLAGS) -flto $(LDLIBS) $(LDFLAGS) $(COMMON_O) prog03.o -o prog03
+
+prog03_fig: prog03
+	./prog03
+	make -C figures/ prog03
+
 
 force:
 
 clean:
 	@rm -f *.o
-	@rm -f test prog02
+	@rm -f test prog02 prog03
 	@rm -f *.out # gprof
 
 cleandata:

@@ -141,8 +141,6 @@ void mucycle(vector<level<T>>& levels, typename vector<level<T>>::iterator it,
 
    // pre-smooth
    it->smoother_ip(it->A, it->f, it->v, nu1);
-   //resid = it->f - (it->A)*(it->v);
-   //cout << "pre-smooth h-resid (" << it->v.size() << ") = " << sqrt(1./(it->A.n+1))*norm(resid,2) << endl;
 
    if ( it == levels.end()-1 ) { // if we're on the coarsest grid
       // smooth the dick out of it
@@ -155,8 +153,6 @@ void mucycle(vector<level<T>>& levels, typename vector<level<T>>::iterator it,
    else { // we're not on the coarsest grid
 
       // prepare to coarsen
-      //valarray<T> temp = it->f;
-      //temp -= (it->A)*(it->v);
       resid = it->f;
       resid -= (it->A)*(it->v);
 
@@ -175,8 +171,6 @@ void mucycle(vector<level<T>>& levels, typename vector<level<T>>::iterator it,
 
    // post-smooth
    it->smoother_ip(it->A, it->f, it->v, nu2);
-   //resid = it->f - (it->A)*(it->v);
-   //cout << "post-smooth resid (" << it->v.size() << ") = " << pow(1./(it->A.n+1),0.5)*norm(resid,2) << endl;
    return;
 }
 

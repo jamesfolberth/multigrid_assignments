@@ -114,6 +114,19 @@ T norm(const valarray<T>& v, const unsigned p) {
    }
 }
 
+// Discrete L^2 norms
+template<typename T>
+T dl2norm(const valarray<T>& v, const unsigned nx) {
+   return pow(static_cast<T>(nx+1), -0.5)*norm(v,2);
+}
+
+template<typename T>
+T dl2norm(const valarray<T>& v, const unsigned nx, const unsigned ny) {
+   return pow(static_cast<T>(nx+1),-0.5) 
+      * pow(static_cast<T>(ny+1),-0.5)
+      * norm(v,2);
+}
+
 //////////
 // Misc //
 //////////
@@ -145,4 +158,6 @@ template void print_vector<double>(const valarray<double>& v);
 template valarray<double> rand_vec<double>(const unsigned,
                                          const double, const double);
 template double norm<double>(const valarray<double>&, const unsigned);
-
+template double dl2norm<double>(const valarray<double>&, const unsigned);
+template double dl2norm<double>(const valarray<double>&, const unsigned,
+      const unsigned);

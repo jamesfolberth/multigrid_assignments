@@ -564,17 +564,16 @@ void test_mg_2d_intergrid_operators(void) {
 }
 
 
-
 void test_mg_1d_vcycle(void) {
    // {{{ 
-   unsigned L = 17, Lx = 20, n = pow(2,Lx)-1;
-   double sigma = 0., resid_nrm, err_nrm, resid_nrm_prev;
+   unsigned L = 7, Lx = 10, n = pow(2,Lx)-1;
+   double sigma = 0., resid_nrm, err_nrm, resid_nrm_prev, resid_ratio_avg;
    valarray<double> f(0.,n), u(0.,n), v0(0.,n), v(0.,n),
       resid(0.,n), err(0.,n);
 
    double xi = 0.,C = 2., k = 3.;
 
-   int mode = 0;
+   int mode = 1;
    switch (mode) {
       case 0:
          // zero RHS
@@ -647,27 +646,34 @@ void test_mg_1d_vcycle(void) {
    
    resid = levels[0].f - levels[0].A*levels[0].v;
    err = u-levels[0].v;
-   resid_nrm_prev = pow(levels[0].A.n+1,-0.5)*norm(resid,2);
-   err_nrm = pow(levels[0].A.n+1,-0.5)*norm(err,2);
+   resid_nrm_prev = dl2norm(resid,n);
+   err_nrm = dl2norm(err,n);
    
    cout << "||r||_h = " << _PRINT_VECTOR_FORMAT_ << resid_nrm_prev
         << "  ||e||_h = " << _PRINT_VECTOR_FORMAT_ << err_nrm << endl;
- 
-   for (unsigned i = 0; i < 10; ++i) {
+
+   resid_ratio_avg = 1.;
+   unsigned num_cycles = 10;
+   for (unsigned i = 0; i < num_cycles; ++i) {
       vcycle(levels, levels.begin(), 2, 1);
 
       resid = levels[0].f - levels[0].A*levels[0].v;
       err = u-levels[0].v;
-      resid_nrm = pow(levels[0].A.n+1,-0.5)*norm(resid,2);
-      err_nrm = pow(levels[0].A.n+1,-0.5)*norm(err,2);
+      resid_nrm = dl2norm(resid,n);
+      err_nrm = dl2norm(err,n);
 
       cout << "||r||_h = " << _PRINT_VECTOR_FORMAT_ << resid_nrm
-           << "  ||e||_h = " << _PRINT_VECTOR_FORMAT_ << err_nrm
            << "  ratio = " << _PRINT_VECTOR_FORMAT_ 
-           << resid_nrm/resid_nrm_prev << "  at i = " << i << endl;
+           << resid_nrm/resid_nrm_prev
+           << "  ||e||_h = " << _PRINT_VECTOR_FORMAT_ << err_nrm
+           << "  at i = " << i << endl;
 
+      resid_ratio_avg *= resid_nrm / resid_nrm_prev;
       resid_nrm_prev = resid_nrm;
    }
+
+   cout << "Average reduction fator = " 
+        << pow(resid_ratio_avg, 1./static_cast<double>(num_cycles)) << endl;
 
    // }}}
 }
@@ -679,14 +685,34 @@ void test_mg_2d_vcycle(void) {
    valarray<double> f(0.,n), u(0.,n), v0(0.,n), v(0.,n),
       resid(0.,n), err(0.,n);
 
-   int mode = 0;
+   unsigned nx = pow(2,Lx)-1, ny = pow(2,Ly)-1;
+
+   int mode = 1;
    switch (mode) {
       case 0:
          // zero RHS
+         sigma = 0.;
          v0 = rand_vec<double>(n,-1.,1.);
          f *= 0.; u *= 0.;
          break;
 
+      // Equation 4.8 from the text
+      case 1:
+      {
+         sigma = 0.;
+         v0 = rand_vec<double>(n,-1.,1.);
+         double xij, yij;
+         for (unsigned i=0; i < ny; ++i) {
+            for (unsigned j=0; j < nx; ++j) {
+               xij = double(j+1.)/double(nx+1.);
+               yij = double(i+1.)/double(ny+1.);
+               u[ny*i+j] = (xij*xij - pow(xij,4.))*(pow(yij,4.)-yij*yij);
+               f[ny*i+j] = 2.*((1.-6.*xij*xij)*yij*yij*(1.-yij*yij) 
+                     + (1.-6.*yij*yij)*xij*xij*(1.-xij*xij));
+            }
+         }
+         break;
+      }
       default:
          cerr << "error: test.cpp:test_mg_2d_vcycle: bad mode" << endl;
          exit(-1);
@@ -721,8 +747,8 @@ void test_mg_2d_vcycle(void) {
    
    resid = levels[0].f - levels[0].A*levels[0].v;
    err = u-levels[0].v;
-   resid_nrm_prev = pow(levels[0].A.n+1,-1.)*norm(resid,2);
-   err_nrm = pow(levels[0].A.n+1,-1.)*norm(err,2);
+   resid_nrm_prev = dl2norm(resid, nx, ny);
+   err_nrm = dl2norm(err, nx, ny);
    
    cout << "||r||_h = " << _PRINT_VECTOR_FORMAT_ << resid_nrm_prev
         << "  ||e||_h = " << _PRINT_VECTOR_FORMAT_ << err_nrm << endl;
@@ -733,9 +759,9 @@ void test_mg_2d_vcycle(void) {
 
       resid = levels[0].f - levels[0].A*levels[0].v;
       err = u-levels[0].v;
-      resid_nrm = pow(levels[0].A.n+1,-1.)*norm(resid,2);
+      resid_nrm = dl2norm(resid, nx, ny);
       //resid_nrm = norm(resid,0);
-      err_nrm = pow(levels[0].A.n+1,-1.)*norm(err,2);
+      err_nrm = dl2norm(err, nx, ny);
       //err_nrm = norm(err,0);
 
       cout << "||r||_h = " << _PRINT_VECTOR_FORMAT_ << resid_nrm
@@ -778,8 +804,9 @@ int main() {
    // Multigrid
    //test_mg_1d_intergrid_operators();
    //test_mg_2d_intergrid_operators();
-   //test_mg_1d_vcycle();
-   test_mg_2d_vcycle();
+   
+   test_mg_1d_vcycle();
+   //test_mg_2d_vcycle();
 
    return 0;
 }
