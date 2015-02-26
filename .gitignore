@@ -1,6 +1,8 @@
 *.txt*
 *.o
 *.tikz*
+*.out
 
 cpp/test
 cpp/prog02
+cpp/prog03

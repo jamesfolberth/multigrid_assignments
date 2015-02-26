@@ -42,12 +42,119 @@ matrix_coo<T>::matrix_coo(
    this->clean();
 }
 
+
+// Insertion sort
+// O(n^2) worst case, O(n*k) for sorted w/ "bandwidth" k
+// done in place, O(1) extra memory
+template<typename T>
+void insertion_sort(vector<unsigned>& rind, vector<unsigned>& cind,
+      vector<T>& v) {
+
+   auto compare = [&] (const unsigned lhs_r, const unsigned lhs_c,
+      const unsigned rhs_r, const unsigned rhs_c) -> bool {
+      if ( lhs_r < rhs_r ) {
+         return 1;
+      }
+      else if ( lhs_r == rhs_r ) {
+         if ( lhs_c < rhs_c ) return 1;
+         else return 0; // ignore repeats
+      }
+      else {
+         return 0;
+      }
+   };
+   
+   unsigned rtemp, ctemp;
+   T vtemp;
+   unsigned i,j;
+   for (i = 1; i < rind.size(); ++i) {
+      rtemp = rind[i];
+      ctemp = cind[i];
+      vtemp = v[i];
+      j = i;
+
+      // rotate
+      while ( j > 0 && compare(rtemp, ctemp, rind[j-1], cind[j-1]) ) {
+         rind[j] = rind[j-1];
+         cind[j] = cind[j-1];
+         v[j] = v[j-1];
+         j -= 1;
+      }
+
+      // insert
+      rind[j] = rtemp;
+      cind[j] = ctemp;
+      v[j] = vtemp;
+   }             
+}               
+
+
 // TODO should accept a combine function (default to lambda add) like
 // Julia's CSC
 template<typename T>
 void matrix_coo<T>::clean(void) {
 // Reorder the row/col/vals so that they are in row-major order
 
+   //// Insertion sort
+   //// O(n^2) worst case, O(n*k) for sorted w/ "bandwidth" k
+   //// done in place, O(1) extra memory
+   // For 2D model problem, this is crazy slow
+   //insertion_sort(row_ind, col_ind, val);
+   //
+   //cout << "Done sorting (" << row_ind.size() << ")" << endl;
+
+   ////cout << *this << endl;
+
+   //// Combine duplicates and remove zero elements
+   //unsigned num_dups = 0;
+   //if ( abs(val[0]) < _ELEMENT_ZERO_TOL_ ) {
+   //   row_ind.erase(row_ind.begin());
+   //   col_ind.erase(col_ind.begin());
+   //   val.erase(val.begin());
+
+   //   num_dups += 1;
+   //}
+
+   //for (unsigned i = 1; i < row_ind.size(); ++i) {
+
+   //   if ( abs(val[i]) < _ELEMENT_ZERO_TOL_ ) {
+   //      row_ind.erase(row_ind.begin() + i);
+   //      col_ind.erase(col_ind.begin() + i);
+   //      val.erase(val.begin() + i);
+
+   //      num_dups += 1;
+   //   }
+
+   //   // if duplicate
+   //   if ( col_ind[i] == col_ind[i-1] && row_ind[i] == row_ind[i-1] ) {
+
+   //      // combine then erase duplicate
+   //      val[i-1] += val[i];
+   //      row_ind.erase(row_ind.begin() + i);
+   //      col_ind.erase(col_ind.begin() + i);
+   //      val.erase(val.begin() + i);
+   //      
+   //      num_dups += 1;
+   //   }
+   //}
+
+   //if (_DEBUG_ >= 1 && num_dups > 0) {
+   //   cerr << "warning: matrix_coo:clean: duplicate entries found or "
+   //        << "zeros; combining entries by adding and removing zero entries"
+   //        << endl;
+   //}
+
+   //// shrink container to fit size, which may cause reallocation
+   //row_ind.shrink_to_fit();
+   //col_ind.shrink_to_fit();
+   //val.shrink_to_fit();
+
+
+   // TODO this is slow
+   // Idea: make a class with pointers to row_ind, col_ind, val where the iterator is a "facade" that points to a tuple of (i,j,v) or something.  I don't know how to do this
+   // Idea: sort (i,j,n), where n = 0:row_ind.size()-1; then sort val using ordering of n.  This will save a bit of memory usage
+   // OLD SORT
+   //
    // Copy row inds, col inds, vals to vector of (i,j,val) tuples
    // Then sort vector of tuples with stdlib sort
    // Then overwrite values and remove duplicates
@@ -67,7 +174,6 @@ void matrix_coo<T>::clean(void) {
       sort_me[i].val = val[i];
    }
 
-   // TODO this is slow
    sort(sort_me.begin(), sort_me.end(), 
          [&] (const sort_tuple& lhs, const sort_tuple& rhs) -> bool {
             if (lhs.i < rhs.i) {
@@ -80,6 +186,8 @@ void matrix_coo<T>::clean(void) {
             else return 0;
          });
 
+   //cout << "Done sorting (" << row_ind.size() << ")" << endl;
+   
    // assign to class member and deal with duplicate entries by adding
    unsigned old_row=-1, old_col=-1, num_dups=0;
    for (unsigned i=0; i<sort_me.size(); ++i) {
@@ -116,6 +224,7 @@ void matrix_coo<T>::clean(void) {
    row_ind.resize(row_ind.size()-num_dups);
    col_ind.resize(col_ind.size()-num_dups);
    val.resize(val.size()-num_dups);
+   // END OLD SORT
 }
 
 

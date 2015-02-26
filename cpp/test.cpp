@@ -680,7 +680,7 @@ void test_mg_1d_vcycle(void) {
 
 void test_mg_2d_vcycle(void) {
    // {{{ 
-   unsigned L = 7, Lx = 10, Ly = 10, n = (pow(2,Lx)-1)*(pow(2,Ly)-1);
+   unsigned L = 5, Lx = 8, Ly = 8, n = (pow(2,Lx)-1)*(pow(2,Ly)-1);
    double sigma = 0., resid_nrm, err_nrm, resid_nrm_prev;
    valarray<double> f(0.,n), u(0.,n), v0(0.,n), v(0.,n),
       resid(0.,n), err(0.,n);
@@ -806,7 +806,7 @@ int main() {
    //test_mg_2d_intergrid_operators();
    
    test_mg_1d_vcycle();
-   //test_mg_2d_vcycle();
+   test_mg_2d_vcycle();
 
    return 0;
 }
