@@ -7,6 +7,9 @@ prog02:
 prog03:
 	make -C prog03
 
+prog04:
+	make -C prog04
+
 force:
 
 clean:
@@ -15,7 +18,10 @@ clean:
 cleandata:
 	make -C prog02 cleandata
 	make -C prog03 cleandata
+	make -C prog04 cleandata
 
 deepclean: clean cleandata
 	make -C prog02 deepclean
 	make -C prog03 deepclean
+	make -C prog04 deepclean
+

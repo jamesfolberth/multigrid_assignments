@@ -59,11 +59,11 @@ vector<level<T>> build_levels_1d(function<matrix_crs<T>(unsigned)> build_A,
       function<matrix_crs<T>(unsigned)> build_R,
       function<void(const matrix_crs<T>&, const valarray<T>&,
          valarray<T>&, unsigned)> smoother_ip,
-      unsigned L, unsigned Lx, const valarray<T>& v0);
+      unsigned L, unsigned Lx, const valarray<T>& v0, unsigned v0_level=0);
 
 template<typename T>
 vector<level<T>> build_levels_1d(function<matrix_crs<T>(unsigned)> build_A,
-      valarray<T> f, function<matrix_crs<T>(unsigned)> build_P, 
+      function<matrix_crs<T>(unsigned)> build_P, 
       function<matrix_crs<T>(unsigned)> build_R,
       function<void(const matrix_crs<T>&, const valarray<T>&,
          valarray<T>&, unsigned)> smoother_ip,
@@ -76,11 +76,12 @@ vector<level<T>> build_levels_2d(function<matrix_crs<T>(unsigned,unsigned)> buil
       function<matrix_crs<T>(unsigned,unsigned)> build_R,
       function<void(const matrix_crs<T>&, const valarray<T>&,
          valarray<T>&, unsigned)> smoother_ip,
-      unsigned L, unsigned Lx, unsigned Ly, const valarray<T>& v0);
+      unsigned L, unsigned Lx, unsigned Ly, const valarray<T>& v0,
+      unsigned v0_level=0);
 
 template<typename T>
 vector<level<T>> build_levels_2d(function<matrix_crs<T>(unsigned,unsigned)> build_A,
-      valarray<T> f, function<matrix_crs<T>(unsigned,unsigned)> build_P, 
+      function<matrix_crs<T>(unsigned,unsigned)> build_P, 
       function<matrix_crs<T>(unsigned,unsigned)> build_R,
       function<void(const matrix_crs<T>&, const valarray<T>&,
          valarray<T>&, unsigned)> smoother_ip,
@@ -100,6 +101,10 @@ void mucycle(vector<level<T>>& levels, typename vector<level<T>>::iterator it,
 template<typename T>
 void vcycle(vector<level<T>>& levels, typename vector<level<T>>::iterator it,
       unsigned nu1, unsigned nu2);
+
+template<typename T>
+void fmg(vector<level<T>>& levels, unsigned nu1, unsigned nu2,
+      unsigned num_vcycles=1);
 
 // }}}
 

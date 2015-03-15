@@ -21,7 +21,7 @@ COMMON_CPP= matrix_coo.cpp\
 COMMON_HPP= $(COMMON_CPP:%.cpp=%.hpp)
 COMMON_O  = $(COMMON_CPP:%.cpp=%.o)
 
-.PHONY: all clean run prog02_fig
+.PHONY: all clean run prog02_fig prog03_fig prog04_fig
 
 all: test run
 
@@ -65,6 +65,7 @@ prog02_fig: prog02
 	./prog02
 	make -C figures/ prog02
 
+
 prog03: $(COMMON_O) prog03.cpp
 	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c prog03.cpp
 	$(CPP) $(CPPFLAGS) -flto $(LDLIBS) $(LDFLAGS) $(COMMON_O) prog03.o -o prog03
@@ -72,6 +73,15 @@ prog03: $(COMMON_O) prog03.cpp
 prog03_fig: prog03
 	./prog03
 	make -C figures/ prog03
+
+
+prog04: $(COMMON_O) prog04.cpp
+	$(CPP) $(CPPFLAGS) $(LDLIBS) $(LDFLAGS) -c prog04.cpp
+	$(CPP) $(CPPFLAGS) -flto $(LDLIBS) $(LDFLAGS) $(COMMON_O) prog04.o -o prog04
+
+prog04_fig: prog04
+	./prog04
+	make -C figures/ prog04
 
 
 force:

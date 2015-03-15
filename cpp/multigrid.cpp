@@ -17,7 +17,7 @@ vector<level<T>> build_levels_1d(function<matrix_crs<T>(unsigned)> build_A,
       function<matrix_crs<T>(unsigned)> build_R,
       function<void(const matrix_crs<T>&, const valarray<T>&,
          valarray<T>&, unsigned)> smoother_ip,
-      unsigned L, unsigned Lx, const valarray<T>& v0) {
+      unsigned L, unsigned Lx, const valarray<T>& v0, unsigned v0_level) {
    // Set up A,P,R,smoother, etc. for levels.  This is just a generic setup
    // for multigrid with A coarsened by PDE discretization.
    //
@@ -39,8 +39,8 @@ vector<level<T>> build_levels_1d(function<matrix_crs<T>(unsigned)> build_A,
    }
 
    // initial RHS and v
-   levels[0].f = f;
-   levels[0].v = v0;
+   levels[v0_level].f = f;
+   levels[v0_level].v = v0;
 
    //for (auto it = levels.begin(); it != levels.end(); ++it) {
    //   //it->A.print_full();
@@ -53,7 +53,7 @@ vector<level<T>> build_levels_1d(function<matrix_crs<T>(unsigned)> build_A,
 
 template<typename T>
 vector<level<T>> build_levels_1d(function<matrix_crs<T>(unsigned)> build_A,
-      valarray<T> f, function<matrix_crs<T>(unsigned)> build_P,
+      function<matrix_crs<T>(unsigned)> build_P,
       function<matrix_crs<T>(unsigned)> build_R,
       function<void(const matrix_crs<T>&, const valarray<T>&,
          valarray<T>&, unsigned)> smoother_ip,
@@ -61,10 +61,22 @@ vector<level<T>> build_levels_1d(function<matrix_crs<T>(unsigned)> build_A,
    // Set up A,P,R,smoother, etc. for levels.  This is just a generic setup
    // for multigrid with A coarsened by PDE discretization.  
    //
-   // Generate a random vector v0, as opposed to the caller supplying one
+   // Set f and v to zero vectors on all grids
 
-   return build_levels_1d(build_A, f, build_P, build_R, smoother_ip, L, Lx,
-         rand_vec<T>(pow(2,Lx)-1, static_cast<T>(-1.), static_cast<T>(1.)));
+   // build and populate vector of levels
+   vector<level<T>> levels(L);
+
+   // A,P,R
+   for (unsigned l = 0; l < L; ++l) {
+      levels[l].A = build_A(Lx-l);
+      levels[l].f = valarray<T>(0.,levels[l].A.n);
+      levels[l].v = valarray<T>(0.,levels[l].A.n);
+      levels[l].P = build_P(Lx-l);
+      levels[l].R = build_R(Lx-l);
+      levels[l].smoother_ip = smoother_ip;
+   }
+
+   return levels;
 }
 
 
@@ -74,7 +86,8 @@ vector<level<T>> build_levels_2d(function<matrix_crs<T>(unsigned,unsigned)> buil
       function<matrix_crs<T>(unsigned,unsigned)> build_R,
       function<void(const matrix_crs<T>&, const valarray<T>&,
          valarray<T>&, unsigned)> smoother_ip,
-      unsigned L, unsigned Lx, unsigned Ly, const valarray<T>& v0) {
+      unsigned L, unsigned Lx, unsigned Ly, const valarray<T>& v0, 
+      unsigned v0_level) {
    // Set up A,P,R,smoother, etc. for levels.  This is just a generic setup
    // for multigrid with A coarsened by PDE discretization.
    //
@@ -96,21 +109,15 @@ vector<level<T>> build_levels_2d(function<matrix_crs<T>(unsigned,unsigned)> buil
    }
 
    // initial RHS and v
-   levels[0].f = f;
-   levels[0].v = v0;
-
-   //for (auto it = levels.begin(); it != levels.end(); ++it) {
-   //   //it->A.print_full();
-   //   //it->P.print_full();
-   //   it->R.print_full();
-   //}
+   levels[v0_level].f = f;
+   levels[v0_level].v = v0;
 
    return levels;
 }
 
 template<typename T>
 vector<level<T>> build_levels_2d(function<matrix_crs<T>(unsigned,unsigned)> build_A,
-      valarray<T> f, function<matrix_crs<T>(unsigned,unsigned)> build_P,
+      function<matrix_crs<T>(unsigned,unsigned)> build_P,
       function<matrix_crs<T>(unsigned,unsigned)> build_R,
       function<void(const matrix_crs<T>&, const valarray<T>&,
          valarray<T>&, unsigned)> smoother_ip,
@@ -118,11 +125,22 @@ vector<level<T>> build_levels_2d(function<matrix_crs<T>(unsigned,unsigned)> buil
    // Set up A,P,R,smoother, etc. for levels.  This is just a generic setup
    // for multigrid with A coarsened by PDE discretization.
    //
-   // Generate a random vector v0, as opposed to the caller supplying one
+   // Set f and v to zero vectors on all levels
 
-   return build_levels_2d(build_A, f, build_P, build_R, smoother_ip, L, Lx, Ly,
-         rand_vec<T>((pow(2,Lx)-1)*(pow(2,Ly)-1),
-            static_cast<T>(-1.), static_cast<T>(1.)));
+   // build and populate vector of levels
+   vector<level<T>> levels(L);
+
+   // build/copy A,P,R, etc.
+   for (unsigned l = 0; l < L; ++l) {
+      levels[l].A = build_A(Lx-l, Ly-l);
+      levels[l].f = valarray<T>(0.,levels[l].A.n);
+      levels[l].v = valarray<T>(0.,levels[l].A.n);
+      levels[l].P = build_P(Lx-l, Ly-l);
+      levels[l].R = build_R(Lx-l, Ly-l);
+      levels[l].smoother_ip = smoother_ip;
+   }
+
+   return levels;
 }
 // }}}
 
@@ -181,6 +199,34 @@ void vcycle(vector<level<T>>& levels, typename vector<level<T>>::iterator it,
    // A V cycle is just a Mu-cycle with mu=1
    mucycle(levels, it, nu1, nu2, 1);
 }
+
+template<typename T>
+void fmg(vector<level<T>>& levels, unsigned nu1, unsigned nu2,
+      unsigned num_vcycles) {
+   // Perform (nu1,nu2) full multigrid with num_vcycles vcycles at each 
+   // interior stage
+
+   auto it = levels.end()-1; // this is the last element in the vector
+
+   // smooth the dick out of it
+   // TODO direct solve
+   it->smoother_ip(it->A, it->f, it->v, 1000);
+
+   // Iterate through up through grids
+   // We will end up going to the top grid and doing num_vcycles vcycles there
+   for (; it != levels.begin(); --it) {
+      
+      // Prolong up to upper level
+      (it-1)->v = (it->P)*(it->v);
+
+      // do num_vcycles vcycles
+      for (unsigned nu = 0; nu < num_vcycles; ++nu) {
+         vcycle(levels, it-1, nu1, nu2);
+      }
+   }
+}
+
+
 
 // }}}
 
@@ -485,16 +531,17 @@ matrix_crs<T> operator_2d_restrict_full(unsigned lx, unsigned ly) {
 
 // Force instatiation
 // double
+// Level
 template vector<level<double>> build_levels_1d(
       function<matrix_crs<double>(unsigned)> build_A, valarray<double> f,
       function<matrix_crs<double>(unsigned)> build_P,
       function<matrix_crs<double>(unsigned)> build_R,
       function<void(const matrix_crs<double>&, 
          const valarray<double>&, valarray<double>&, unsigned)>,
-      unsigned L, unsigned Lx, const valarray<double>& v0);
+      unsigned L, unsigned Lx, const valarray<double>& v0, unsigned v0_level);
 
 template vector<level<double>> build_levels_1d(
-      function<matrix_crs<double>(unsigned)> build_A, valarray<double> f,
+      function<matrix_crs<double>(unsigned)> build_A,
       function<matrix_crs<double>(unsigned)> build_P,
       function<matrix_crs<double>(unsigned)> build_R,
       function<void(const matrix_crs<double>&, 
@@ -508,18 +555,18 @@ template vector<level<double>> build_levels_2d(
       function<matrix_crs<double>(unsigned,unsigned)> build_R,
       function<void(const matrix_crs<double>&, 
          const valarray<double>&, valarray<double>&, unsigned)>,
-      unsigned L, unsigned Lx, unsigned Ly, const valarray<double>& v0);
+      unsigned L, unsigned Lx, unsigned Ly, const valarray<double>& v0,
+      unsigned v0_level);
 
 template vector<level<double>> build_levels_2d(
       function<matrix_crs<double>(unsigned,unsigned)> build_A,
-      valarray<double> f,
       function<matrix_crs<double>(unsigned,unsigned)> build_P,
       function<matrix_crs<double>(unsigned,unsigned)> build_R,
       function<void(const matrix_crs<double>&, 
          const valarray<double>&, valarray<double>&, unsigned)>,
       unsigned L, unsigned Lx, unsigned Ly);
 
-
+// Cycles
 template void mucycle(vector<level<double>>& levels, 
       vector<level<double>>::iterator, unsigned nu1, unsigned nu2,
       unsigned mu);
@@ -527,6 +574,10 @@ template void mucycle(vector<level<double>>& levels,
 template void vcycle(vector<level<double>>& levels, 
       vector<level<double>>::iterator, unsigned nu1, unsigned nu2);
 
+template void fmg(vector<level<double>>& levels, unsigned nu1, unsigned nu2,
+      unsigned num_vcycles);
+
+// Operators
 template matrix_crs<double> operator_1d_interp_lin<double>(unsigned);
 template matrix_crs<double> operator_1d_restrict_inj<double>(unsigned);
 template matrix_crs<double> operator_1d_restrict_full<double>(unsigned);

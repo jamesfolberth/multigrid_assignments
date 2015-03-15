@@ -355,7 +355,7 @@ void table_4_2_1d(void) {
 
    // build levels
    vector<level<double>> levels = build_levels_1d<double>(build_A, f, build_P,
-         build_R, smoother, L, Lx, v0);
+         build_R, smoother, L, Lx, v0, 0);
 
    unsigned num_cycles = 10;
    unsigned nu1, nu2;
@@ -494,21 +494,21 @@ void mg_1d_vcycle(void) {
 
    auto smoother = [](const matrix_crs<double>& _A, const valarray<double>& _f,
          valarray<double>& _v, unsigned _num_itr)
-      //{wjacobi_ip<double>(_A,_f,_v,_num_itr);};
+      {wjacobi_ip<double>(_A,_f,_v,_num_itr);};
       //{gauss_seidel_ip<double>(_A,_f,_v,_num_itr);};
-      {rbgauss_seidel_ip<double>(_A,_f,_v,_num_itr);};
+      //{rbgauss_seidel_ip<double>(_A,_f,_v,_num_itr);};
 
 
    // build levels
    vector<level<double>> levels = build_levels_1d<double>(build_A, f, build_P,
-         build_R, smoother, L, Lx, v0);
+         build_R, smoother, L, Lx, v0, 0);
 
 
    // Print to a file
    fstream file;
-   //file.open("figures/prog03/mg_1d_vcycle_J.txt", ios::out | ios::trunc);
+   file.open("figures/prog03/mg_1d_vcycle_J.txt", ios::out | ios::trunc);
    //file.open("figures/prog03/mg_1d_vcycle_GS.txt", ios::out | ios::trunc);
-   file.open("figures/prog03/mg_1d_vcycle_RBGS.txt", ios::out | ios::trunc);
+   //file.open("figures/prog03/mg_1d_vcycle_RBGS.txt", ios::out | ios::trunc);
    if ( file.is_open() ) {
 
    // do V cycle
@@ -561,10 +561,10 @@ int main(void) {
    table_4_1(2);
    table_4_1(3);
 
-   //table_4_2(); need to change function and run 6 times
-   //table_4_2_1d(); need to change function and run 6 times
+   //table_4_2();// need to change function and run 6 times
+   //table_4_2_1d();// need to change function and run 6 times
    
-   //mg_1d_vcycle(); need to change function and run 3 times
+   mg_1d_vcycle();// need to change function and run 3 times
 
    return 0;
 }
