@@ -88,7 +88,7 @@ force:
 
 clean:
 	@rm -f *.o
-	@rm -f test prog02 prog03
+	@rm -f test prog02 prog03 prog04
 	@rm -f *.out # gprof
 
 cleandata:
