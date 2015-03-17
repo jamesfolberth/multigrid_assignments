@@ -5,6 +5,9 @@ https://github.com/jamesfolberth/multigrid_assignments
 ## C++
 Note that I'm using the C++11 standard and GCC 4.9.2.  I've enabled colorized diagnostic messages.  You can disable the coloring (for instance, if you've got an older version of the GCC) in the top level Makefile in the C++ directory.
 
+### Programming Assignment 4
+Build with `make prog04`; run with ./prog04.  I only write to cout.
+
 ### Programming Assignment 3
 Build with `make prog03`.  I write a few text files to figures/prog03/ and list them in my writeup.
 
